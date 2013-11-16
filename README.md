@@ -4,7 +4,14 @@ VirusTotal public and private APIv2 Full support
 This script was made public into the official VT API documentation page.
 https://www.virustotal.com/en/documentation/public-api/
 
-For set api key: <br />
+Before using the tool you must set your api key at line 1409 (near the end of the file) or in ~.vtapi.
+
+Dependencies: 
+ *  requests
+ *  texttable
+ *  python-dateutils
+ 
+These can be installed via PIP or a package manager.
 
 16.11.2013 Updates:
 
@@ -19,9 +26,6 @@ if api key not in value , will check by default ~/.vtapi, but you can put it to 
 
 special thanks to @kellewic and @urbanski
 
-=== FIN ===
-
-Dependence: requests, texttable and python-dateutils you install it from pip/other packet manager or download and install from oficial pages
 
 few public API functions getted from Chris Clark script<br />
 And finally has been added full public and private API support by Andriy Brukhovetskyy (doomedraven)<br />
