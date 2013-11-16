@@ -182,9 +182,9 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
       if jdata.get('url') : print 'Scanned url :\n\t {url}'.format(url = jdata['url'])
   
   else:
-    if jdata['scans']['Sophos']['result']     : print '\n\tSophos Detection     :',jdata['scans']['Sophos']['result']
-    if jdata['scans']['Kaspersky']['result']  : print '\tKaspersky Detection  :',jdata['scans']['Kaspersky']['result']
-    if jdata['scans']['TrendMicro']['result'] : print '\tTrendMicro Detection :',jdata['scans']['TrendMicro']['result']
+    if jdata['scans'].get('Sophos')     and jdata['scans']['Sophos'].get('result')     : print '\n\tSophos Detection     :',jdata['scans']['Sophos']['result']
+    if jdata['scans'].get('Kaspersky')  and jdata['scans']['Kaspersky'].get('result')  : print '\tKaspersky Detection  :',jdata['scans']['Kaspersky']['result']
+    if jdata['scans'].get('TrendMicro') and jdata['scans']['TrendMicro'].get('result') : print '\tTrendMicro Detection :',jdata['scans']['TrendMicro']['result']
 
     print '\n\tResults for MD5    : ',jdata['md5']
     print '\tResults for SHA1   : ',jdata['sha1']
