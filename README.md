@@ -4,25 +4,35 @@ VirusTotal public and private APIv2 Full support
 This script was made public into the official VT API documentation page.
 https://www.virustotal.com/en/documentation/public-api/
 
-Before using the tool you must set your api key at line 1409 (near the end of the file) or in ~.vtapi.
+Before using the tool you must set your api key at line 1442 (near the end of the file) or in ~.vtapi.
 
-Dependencies: 
+**Dependencies:**
  *  requests
  *  texttable
  *  python-dateutils
  
 These can be installed via PIP or a package manager.
 
-16.11.2013 Updates:
+**20.11.2013 Updates:**
 
-1) Code optimization/cleaning, and small print fix
+* Small bug fixed, when internet connection doesn't work correctly
 
-15.11.2013 Updates:
+* Added option for file(s) search, without submitting file.
+Now you don't need to get hash of file and search it in VT if you just want to get the report, check option -fs/--file-search
 
-1) Added support for get apikey from file, now you can put is as before into apikey value at line 1409 or put it to config file
+* In search without verbose mode now if someone/all of Kaspersky/Sophos/TrendMicro 
+don't have results, you will see detections by others engines
+
+**16.11.2013 Updates:**
+
+* Code optimization/cleaning, and small print fix
+
+**15.11.2013 Updates:**
+
+* Added support for get apikey from file, now you can put is as before into apikey value at line 1409 or put it to config file
 if api key not in value , will check by default ~/.vtapi, but you can put it to another file and use -c/--config-file option
 
-2) Limit reached issue patched 
+* Limit reached issue patched 
 
 special thanks to @kellewic and @urbanski
 
