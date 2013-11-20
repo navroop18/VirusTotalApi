@@ -1,12 +1,11 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
-# Full VT APIv2 functions by Andriy (aka doomedraven) Brukhovetskyy (Twitter : @d00m3dr4v3n)
+# Full VT APIv2 functions added by Andriy (aka doomedraven) Brukhovetskyy (Twitter : @d00m3dr4v3n)
 # No Licence or warranty expressed or implied, use however you wish! 
 # For more information look at:
 #
 # https://www.virustotal.com/en/documentation/public-api
 # https://www.virustotal.com/en/documentation/private-api
-
 
 import os
 import re
@@ -163,7 +162,29 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
         
         print '\n[+] Latest detected URLs\n'
         pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total','scan_date','url'], [15, 10, 20, 100], ['c', 'c', 'c', 'l'])
-        
+
+def get_detections(scans):
+      
+      
+      plist   = [[]]
+      engines = ['Sophos', 'Kaspersky', 'TrendMicro']
+      cont    = 3
+
+      for engine in engines:
+          if scans.get(engine) and scans[engine].get('result'):
+              plist.append([engine, scans[engine]['result']])
+              cont -= 1
+      
+      for engine in scans:
+            if scans.get(engine) and scans[engine].get('result') and cont > 0:
+                  plist.append([engine, scans[engine]['result']])
+                  cont -= 1
+            
+            elif cont == 0:
+                  break
+      if cont != 3:
+            pretty_print_special(plist, ['Vendor name',  'Result'], [30, 55], ['r', 'l'])
+
 def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit = False):
   
   if jdata['response_code'] != 1:
@@ -176,19 +197,18 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
       sys.exit()
   
   if jdata.get('scan_date') : print '\nScanned on : \n\t{0}'.format(jdata['scan_date'])
-  if jdata.get('total') : print '\nDetections:\n\t {positives}/{total} Positives/Total\n'.format(positives = jdata['positives'], total = jdata['total'])
+  if jdata.get('total') : print '\nDetections:\n\t {positives}/{total} Positives/Total'.format(positives = jdata['positives'], total = jdata['total'])
    
   if url_report:
       if jdata.get('url') : print 'Scanned url :\n\t {url}'.format(url = jdata['url'])
   
   else:
-    if jdata['scans'].get('Sophos')     and jdata['scans']['Sophos'].get('result')     : print '\n\tSophos Detection     :',jdata['scans']['Sophos']['result']
-    if jdata['scans'].get('Kaspersky')  and jdata['scans']['Kaspersky'].get('result')  : print '\tKaspersky Detection  :',jdata['scans']['Kaspersky']['result']
-    if jdata['scans'].get('TrendMicro') and jdata['scans']['TrendMicro'].get('result') : print '\tTrendMicro Detection :',jdata['scans']['TrendMicro']['result']
-
-    print '\n\tResults for MD5    : ',jdata['md5']
-    print '\tResults for SHA1   : ',jdata['sha1']
-    print '\tResults for SHA256 : ',jdata['sha256']
+    if not verbose:
+      get_detections(jdata['scans'])
+      
+    print '\n\tResults for MD5    : {0}'.format(jdata['md5'])
+    print '\tResults for SHA1   : {0}'.format(jdata['sha1'])
+    print '\tResults for SHA256 : {0}'.format(jdata['sha256'])
     
   if verbose == True and jdata.get('scans'):
     print '\nVerbose VirusTotal Information Output:'
@@ -197,7 +217,7 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
     for x in jdata['scans']:
         plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- '])
 
-    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result'], [30, 9, 55], ['l', 'c', 'l'])
+    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result'], [30, 9, 55], ['r', 'c', 'l'])
       
     del plist        
 
@@ -235,8 +255,12 @@ def get_response(url, method="get", **kwargs):
       response = ''
       
       while True:
+            try:
+                  response = getattr(requests, method)(url, **kwargs)
             
-            response = getattr(requests, method)(url, **kwargs)
+            except requests.exceptions.ConnectionError:
+                  print '\n[!] Can\'t resolv hostname, check your internet conection\n'
+                  sys.exit()
 
             if response.status_code == 403:
                   private_api_access_error()
@@ -301,7 +325,7 @@ class vtAPI():
             
             else:
                 hash_report = ', '.join(map(lambda hash_part: hash_part, hash_report))
-                print hash_report,4
+                print hash_report
             
             params  = {'resource':hash_report,'apikey':self.api}
             
@@ -313,6 +337,7 @@ class vtAPI():
             jdata, response = get_response(url, params=params)
               
       if jdata['response_code'] == 0 or jdata['response_code'] == -1:
+            
             if not_exit:
                 return False
             
@@ -469,7 +494,7 @@ class vtAPI():
               if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata_part['sha256'])
               if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
     
-    def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False):
+    def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, scan = False):
 
         """
         Allows to send a file to be analysed by VirusTotal.
@@ -486,7 +511,6 @@ class vtAPI():
         elif isinstance(files, basestring):
             files = glob.glob('{files}'.format(files=files))
       
-         
         params = {'apikey':self.api}
         
         if notify_url:
@@ -506,7 +530,8 @@ class vtAPI():
           
             result = self.getReport(md5, False, verbose, dump, not_exit)
             
-            if not result:
+            if not result and scan == True:
+                  
                   if (os.path.getsize(submit_file) / 1048576) <= 32:
                         
                     if os.path.isfile(submit_file):
@@ -537,6 +562,10 @@ class vtAPI():
 
                   else:
                     print '[!] Ignored file: {file}'.format(file = submit_file)
+                  
+                    
+            elif not result and scan == False:
+                  print 'Report for file : {0} not fount'.format(submit_file)
     
     def url_scan_and_report(self, urls, key, verbose, dump=False, add_to_scan='0'):
         
@@ -1229,9 +1258,10 @@ def main(apikey):
   opt.add_argument('value', nargs='*', help='Enter the Hash, Path to File(s) or Url(s)')
   opt.add_argument('-c', '--config-file', action='store',  default='~/.vtapi', help='Path to configuration file')
   
-  opt.add_argument('-f', '--file-scan',   action='store_true', dest='files', help='File(s) scan, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
-  opt.add_argument('-u',  '--url-scan',   action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api)')
-  opt.add_argument('-ur', '--url-report', action='store_true',               help='Url(s) report, support space separated list, Max 4 (or 25 if you have private api) urls, you can use --url-report --url-scan options for analysing url(s) if they are not in VT data base')
+  opt.add_argument('-fs', '--file-search', action='store_true',               help='File(s) search, this option, don\'t upload file to VirusTotal, just search by hash, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
+  opt.add_argument('-f',  '--file-scan',   action='store_true', dest='files', help='File(s) scan, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
+  opt.add_argument('-u',  '--url-scan',    action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api)')
+  opt.add_argument('-ur', '--url-report',  action='store_true',               help='Url(s) report, support space separated list, Max 4 (or 25 if you have private api) urls, you can use --url-report --url-scan options for analysing url(s) if they are not in VT data base')
 
   opt.add_argument('-d', '--domain-info',   action='store_true', dest='domain',  help='Retrieves a report on a given domain (PRIVATE API ONLY! including the information recorded by VirusTotal\'s Passive DNS infrastructure)')
   opt.add_argument('-i', '--ip-info',       action='store_true', dest='ip',      help='A valid IPv4 address in dotted quad notation, for the time being only IPv4 addresses are supported.')
@@ -1321,7 +1351,10 @@ def main(apikey):
                             options.detected_downloaded_samples   = options.behavior_network = options.behavior_process        = options.behavior_summary = True
   
   if options.files:
-    vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump)
+    vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump, scan = True)
+  
+  elif options.file_search:
+      vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump)
   
   elif options.url_scan and not options.url_report: 
     vt.url_scan_and_report(options.value, "scan", options.verbose, options.dump)
