@@ -1402,9 +1402,6 @@ def main(apikey):
             action = 1
       
       vt.url_scan_and_report(options.value, "report", options.verbose, options.dump, action)
-  
-  elif option.url_scan_file:
-      vt.url_scan_from_file(options.value)
     
   elif options.rescan:
       
