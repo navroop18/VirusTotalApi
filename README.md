@@ -15,7 +15,9 @@ These can be installed via PIP or a package manager.
 
 **09.03.2014:**
 
-* Added posibility to scan urls passed in file, filename must be urls_for_scan.txt and one url per line
+* Added posibility to scan urls passed in file, filename must be urls_for_scan.txt and one url per line.
+
+  Execution as arg: vt.py -u/-ur urls_for_scan.txt
 
 * Removed limits for 4 urls only with public api
 
