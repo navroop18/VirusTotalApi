@@ -13,6 +13,12 @@ Before using the tool you must set your api key at line 1442 (near the end of th
  
 These can be installed via PIP or a package manager.
 
+**09.03.2014:**
+
+* Added posibility to scan urls passed in file, filename must be urls_for_scan.txt and one url per line
+
+* Removed limits for 4 urls only with public api
+
 **20.11.2013 Updates:**
 
 * Small bug fixed, when internet connection doesn't work correctly
