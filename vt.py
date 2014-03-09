@@ -200,7 +200,7 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
   if jdata.get('total') : print '\nDetections:\n\t {positives}/{total} Positives/Total'.format(positives = jdata['positives'], total = jdata['total'])
    
   if url_report:
-      if jdata.get('url') : print 'Scanned url :\n\t {url}'.format(url = jdata['url'])
+      if jdata.get('url') : print '\nScanned url :\n\t {url}'.format(url = jdata['url'])
   
   else:
     if not verbose:
@@ -311,7 +311,7 @@ class vtAPI():
       if result:
           jdata = load_file(name)
           dump  = False
-          
+           
       else:
             if isinstance(hash_report, list) and len(hash_report) == 1:
                 hash_report = hash_report[0]
@@ -336,6 +336,7 @@ class vtAPI():
             
             jdata, response = get_response(url, params=params)
               
+            print jdata
       if jdata['response_code'] == 0 or jdata['response_code'] == -1:
             
             if not_exit:
@@ -349,7 +350,7 @@ class vtAPI():
             
           if dump:
               jsondump(jdata, name)
-        
+         
           if jdata.get('md5')    : print '\nMD5    : {md5}'.format(    md5 = jdata['md5']) 
           if jdata.get('sha1')   : print 'SHA1   : {sha1}'.format(    sha1 = jdata['sha1'])
           if jdata.get('sha256') : print 'SHA256 : {sha256}'.format(sha256 = jdata['sha256'])
@@ -579,82 +580,117 @@ class vtAPI():
         to access a specific report. At the same time, you can specify a space separated list made up of a combination of hashes and scan_ids so as to perform a batch
         request with one single call (up to 4 resources or 25 if you have private api, per call with the standard request rate).
         """
-
-        result, name = is_file(urls)
       
+        url_uploads = []
+        result = False
         md5 = ''
+        
+        if os.path.basename(urls[0]) != 'urls_for_scan.txt':
+
+          result, name = is_file(urls)
       
+        else:
+            resutl = False
+            
+            if os.path.isfile(urls[0]):
+                  urls = open(urls[0], 'rb').readlines()
+
         if result:
             jdata = load_file(name)
             dump  = False
           
         else:
             
-            if isinstance(urls, list) and len(urls) == 1:
-                url_upload = urls[0]
+           if isinstance(urls, list) and len(urls) == 1:
+              url_uploads = [urls]
+                  
+           elif isinstance(urls, basestring):
+              url_uploads = [urls]  
+                  
+           elif len(urls) > 1 and not isinstance(urls, basestring):
+              
+              #ToDo add private api check here with posibility set 25 urls in one request
+              
+              start = -4
+              end   = 0
+              increment = 4
+              
+              while True:
             
-            elif isinstance(urls, basestring):
-                url_upload = urls  
+                  start += increment
+                  
+                  if len(urls) > end+4:
+                        end   += increment
+                  elif len(urls) <= end+4:
+                        end = len(urls)
+
             
-            elif len(urls) > 4 and not isinstance(urls, basestring):
-                print '[-] To many urls for scanning, MAX 4'
-                sys.exit()
+                  if key == 'scan':
+                     url_uploads.append(['\n'.join(map(lambda url: url, urls[start:end]))])
+                            
+                  elif key == 'report':
+                     url_uploads.append([', '.join(map(lambda url: url.replace('\n',''), urls[start:end]))])
+                     
+                  if end == len(urls):
+                        break
+        cont = 0
+        
+        for url_upload in url_uploads:
             
-            else:
-                if key == 'scan':
-                  url_upload = '\n'.join(map(lambda url: url, urls))
-                
-                elif key == 'report':
-                  url_upload = ', '.join(map(lambda url: url, urls))
-                
+            cont += 1
+            
             if key == 'scan':
-              print 'Submitting url(s) for analysis: \n\t{url}'.format(url = url_upload.replace('\n','\n\t'))
-              params = {'url':url_upload,'apikey':self.api}
+              print 'Submitting url(s) for analysis: \n\t{url}'.format(url = url_upload[0].replace(', ','\n\t'))
+              params = {'url':url_upload[0],'apikey':self.api}
               url   = self.base + 'url/scan'
               
             elif key == 'report':
-              print '\nSearching for url(s) report: \n\t{url}'.format(url = url_upload.replace(', ','\n\t'))
-              params = {'resource':url_upload,'apikey':self.api, 'scan':add_to_scan}
-              url   = self.base + 'url/report'  
-            
+              print '\nSearching for url(s) report: \n\t{url}'.format(url = url_upload[0].replace(', ','\n\t'))
+              params = {'resource':url_upload[0],'apikey':self.api, 'scan':add_to_scan}
+              url   = self.base + 'url/report'
+
             jdata, response = get_response(url, params=params, method="post")  
         
-        if isinstance(jdata, list):
-            
-          for jdata_part in jdata:
-             
-            if jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
-              if jdata_part.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata_part['verbose_msg'])
-              break 
-             
-            if dump:
-              md5 = hashlib.md5(jdata_part['url']).hexdigest()
-            
-            if key == 'report':
-                  url_report = True
-                  parse_report(jdata_part, md5, verbose, dump, url_report)
-            
-            elif key == 'scan':
-              if jdata_part.get('verbose_msg') : print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg  = jdata_part['verbose_msg'], url = jdata_part['url'])
-              if jdata_part.get('permalink')   : print '\tPermanent link : {permalink}'.format(permalink = jdata_part['permalink'])
+            if isinstance(jdata, list):
+                
+              for jdata_part in jdata:
+                 
+                if jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
+                  if jdata_part.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata_part['verbose_msg'])
+                  break 
+                 
+                if dump:
+                  md5 = hashlib.md5(jdata_part['url']).hexdigest()
+                
+                if key == 'report':
+                      url_report = True
+                      parse_report(jdata_part, md5, verbose, dump, url_report)
+                
+                elif key == 'scan':
+                  if jdata_part.get('verbose_msg') : print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg  = jdata_part['verbose_msg'], url = jdata_part['url'])
+                  if jdata_part.get('permalink')   : print '\tPermanent link : {permalink}'.format(permalink = jdata_part['permalink'])
+    
+            else:
+              
+              if jdata['response_code'] == 0 or jdata['response_code'] == -1:
+                if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
+                sys.exit()
+              
+              if dump:
+                md5 = hashlib.md5(jdata['url']).hexdigest()
+              
+              if key == 'report':
+                      url_report = True
+                      parse_report(jdata, md5, verbose, dump, url_report)
+                      
+              elif key == 'scan':
+                  if jdata.get('verbose_msg') : print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg  = jdata['verbose_msg'], url = jdata['url'])
+                  if jdata.get('permalink')   : print '\tPermanent link : {permalink}'.format(permalink = jdata['permalink'])     
 
-        else:
-          
-          if jdata['response_code'] == 0 or jdata['response_code'] == -1:
-            if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
-            sys.exit()
-          
-          if dump:
-            md5 = hashlib.md5(jdata['url']).hexdigest()
-          
-          if key == 'report':
-                  url_report = True
-                  parse_report(jdata, md5, verbose, dump, url_report)
-                  
-          elif key == 'scan':
-              if jdata.get('verbose_msg') : print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg  = jdata['verbose_msg'], url = jdata['url'])
-              if jdata.get('permalink')   : print '\tPermanent link : {permalink}'.format(permalink = jdata['permalink'])
-        
+            if cont%4 == 0:
+                  print '[+] Sleep 60 seconds between the requests'
+                  time.sleep(60)
+      
     def getIP(self, ip, dump=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False,\
                                                          detected_communicated=False, undetected_communicated=False):
  
@@ -1258,10 +1294,10 @@ def main(apikey):
   opt.add_argument('value', nargs='*', help='Enter the Hash, Path to File(s) or Url(s)')
   opt.add_argument('-c', '--config-file', action='store',  default='~/.vtapi', help='Path to configuration file')
   
-  opt.add_argument('-fs', '--file-search', action='store_true',               help='File(s) search, this option, don\'t upload file to VirusTotal, just search by hash, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
-  opt.add_argument('-f',  '--file-scan',   action='store_true', dest='files', help='File(s) scan, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
-  opt.add_argument('-u',  '--url-scan',    action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api)')
-  opt.add_argument('-ur', '--url-report',  action='store_true',               help='Url(s) report, support space separated list, Max 4 (or 25 if you have private api) urls, you can use --url-report --url-scan options for analysing url(s) if they are not in VT data base')
+  opt.add_argument('-fs', '--file-search',  action='store_true',               help='File(s) search, this option, don\'t upload file to VirusTotal, just search by hash, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
+  opt.add_argument('-f',  '--file-scan',    action='store_true', dest='files', help='File(s) scan, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
+  opt.add_argument('-u',  '--url-scan',     action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api), but you can provide more urls, for example with public api,  5 url - this will do 2 requests first with 4 url and other one with only 1, or you can specifi file filename must be urls_for_scan.txt, and one url per line')
+  opt.add_argument('-ur', '--url-report',   action='store_true',               help='Url(s) report, support space separated list, Max 4 (or 25 if you have private api) urls, you can use --url-report --url-scan options for analysing url(s) if they are not in VT data base, read previev description about more then max limits or file with urls')
 
   opt.add_argument('-d', '--domain-info',   action='store_true', dest='domain',  help='Retrieves a report on a given domain (PRIVATE API ONLY! including the information recorded by VirusTotal\'s Passive DNS infrastructure)')
   opt.add_argument('-i', '--ip-info',       action='store_true', dest='ip',      help='A valid IPv4 address in dotted quad notation, for the time being only IPv4 addresses are supported.')
@@ -1366,6 +1402,9 @@ def main(apikey):
             action = 1
       
       vt.url_scan_and_report(options.value, "report", options.verbose, options.dump, action)
+  
+  elif option.url_scan_file:
+      vt.url_scan_from_file(options.value)
     
   elif options.rescan:
       
