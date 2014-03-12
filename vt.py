@@ -10,6 +10,7 @@
 import os
 import re
 import sys
+import csv
 import time
 import json
 import glob
@@ -185,7 +186,24 @@ def get_detections(scans):
       if cont != 3:
             pretty_print_special(plist, ['Vendor name',  'Result'], [30, 55], ['r', 'l'])
 
+def dump_csv(md5_hash, scans):
+    
+    global csv_write
+      
+    f = open('VTDL{0}.csv'.format(md5_hash), 'wt')
+    writer = csv.writer(f, delimiter=',')
+    writer.writerow(('Vendor name', 'Detected', 'Result', 'Last Update'))
+      
+    for x in scans:
+      writer.writerow([x, 'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ', scans[x]['version'] if scans[x]['version'] else ' -- ' , scans[x]['update']]) 
+          
+    f.close()
+    
+    print '\n\tCSV file dumped as: VTDL{0}.csv'.format(md5_hash)
+
 def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit = False):
+  
+  global csv_write
   
   if jdata['response_code'] != 1:
     
@@ -209,21 +227,31 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
     print '\n\tResults for MD5    : {0}'.format(jdata['md5'])
     print '\tResults for SHA1   : {0}'.format(jdata['sha1'])
     print '\tResults for SHA256 : {0}'.format(jdata['sha256'])
-    
+
   if verbose == True and jdata.get('scans'):
     print '\nVerbose VirusTotal Information Output:'
     plist = [[]]
     
-    for x in jdata['scans']:
-        plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- '])
+    for x in sorted(jdata['scans']):
+        if not jdata['scans'][x]['result']:
+            result_len   = 6
+            result_align = 'c' 
+        else:
+            result_len   = 55
+            result_align = 'l' 
+            
+        plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- ', jdata['scans'][x]['version'] if jdata['scans'][x]['version'] else ' -- ' , jdata['scans'][x]['update']])
 
-    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result'], [30, 9, 55], ['r', 'c', 'l'])
+    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'], [30, 9, result_len, 14, 12], ['r', 'c', result_align, 'c', 'c'])
       
     del plist        
 
   if dump == True:
     jsondump(jdata, hash_report)
-    
+
+  if csv_write:
+      dump_csv(jdata['md5'], jdata['scans'])
+
   if jdata.get('permalink') : print "\n\tPermanent Link : {0}\n".format(jdata['permalink'])
   
   return True
@@ -336,7 +364,6 @@ class vtAPI():
             
             jdata, response = get_response(url, params=params)
               
-            print jdata
       if jdata['response_code'] == 0 or jdata['response_code'] == -1:
             
             if not_exit:
@@ -1296,7 +1323,7 @@ def main(apikey):
   
   opt.add_argument('-fs', '--file-search',  action='store_true',               help='File(s) search, this option, don\'t upload file to VirusTotal, just search by hash, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
   opt.add_argument('-f',  '--file-scan',    action='store_true', dest='files', help='File(s) scan, support linux name wildcard, example: /home/user/*malware*, if file was scanned, you will see scan info, for full scan report use verbose mode, and dump if you want save already scanned samples')
-  opt.add_argument('-u',  '--url-scan',     action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api), but you can provide more urls, for example with public api,  5 url - this will do 2 requests first with 4 url and other one with only 1, or you can specifi file filename must be urls_for_scan.txt, and one url per line')
+  opt.add_argument('-u',  '--url-scan',     action='store_true',               help='Url scan, support space separated list, Max 4 urls (or 25 if you have private api), but you can provide more urls, for example with public api,  5 url - this will do 2 requests first with 4 url and other one with only 1, or you can specify file filename must be urls_for_scan.txt, and one url per line')
   opt.add_argument('-ur', '--url-report',   action='store_true',               help='Url(s) report, support space separated list, Max 4 (or 25 if you have private api) urls, you can use --url-report --url-scan options for analysing url(s) if they are not in VT data base, read previev description about more then max limits or file with urls')
 
   opt.add_argument('-d', '--domain-info',   action='store_true', dest='domain',  help='Retrieves a report on a given domain (PRIVATE API ONLY! including the information recorded by VirusTotal\'s Passive DNS infrastructure)')
@@ -1309,6 +1336,7 @@ def main(apikey):
   
   opt.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='Turn on verbosity of VT reports')
   opt.add_argument('-j', '--dump',    action='store_true',                 help='Dumps the full VT report to file (VTDL{md5}.json), if you (re)scan many files/urls, their json data will be dumped to separetad files')
+  opt.add_argument('--csv',           action='store_true',                 help='Dumps the AV\'s detections to file (VTDL{md5}.csv)')
   
   rescan = opt.add_argument_group('Rescan options')
   rescan.add_argument('-r', '--rescan', action='store_true',              help='Allows you to rescan files in VirusTotal\'s file store without having to resubmit them, thus saving bandwidth., support space separated list, MAX 25 hashes')
@@ -1367,6 +1395,9 @@ def main(apikey):
     
   options = opt.parse_args()
  
+  global csv_write
+  csv_write = options.csv
+  
   #it's just a check, if you want set your apikey into value, go to the end of file
   if apikey == '<--------------apikey-here-------->': 
 
