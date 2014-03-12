@@ -192,7 +192,7 @@ def dump_csv(md5_hash, scans):
       
     f = open('VTDL{0}.csv'.format(md5_hash), 'wt')
     writer = csv.writer(f, delimiter=',')
-    writer.writerow(('Vendor name', 'Detected', 'Result', 'Last Update'))
+    writer.writerow(('Vendor name', 'Detected', 'Result', 'Version', 'Last Update'))
       
     for x in scans:
       writer.writerow([x, 'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ', scans[x]['version'] if scans[x]['version'] else ' -- ' , scans[x]['update']]) 
