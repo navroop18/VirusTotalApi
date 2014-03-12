@@ -13,6 +13,14 @@ Before using the tool you must set your api key near the end of the file or in ~
  
 These can be installed via PIP or a package manager.
 
+**12.03.2014:**
+
+* Added option --csv, which permit dump AVs result into csv file
+
+* Now AVs results are sorted from a to z, to help found more quickly searched AV result
+
+* Added AV version and Last AV signature update
+
 **09.03.2014:**
 
 * Added posibility to scan urls passed in file, filename must be urls_for_scan.txt and one url per line.
