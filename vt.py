@@ -20,6 +20,7 @@ import argparse
 import requests
 import ConfigParser
 import texttable as tt
+from urlparse import urlparse
 from operator import methodcaller
 from dateutil.relativedelta import relativedelta
 
@@ -186,24 +187,22 @@ def get_detections(scans):
       if cont != 3:
             pretty_print_special(plist, ['Vendor name',  'Result'], [30, 55], ['r', 'l'])
 
-def dump_csv(md5_hash, scans):
-    
-    global csv_write
+def dump_csv(filename, scans):
       
-    f = open('VTDL{0}.csv'.format(md5_hash), 'wt')
+    f = open('VTDL{0}.csv'.format(filename), 'wt')
     writer = csv.writer(f, delimiter=',')
     writer.writerow(('Vendor name', 'Detected', 'Result', 'Version', 'Last Update'))
       
-    for x in scans:
-      writer.writerow([x, 'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ', scans[x]['version'] if scans[x]['version'] else ' -- ' , scans[x]['update']]) 
+    for x in sorted(scans):
+      writer.writerow([x, 'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ', scans[x]['version'] if scans[x].has_key('version') and scans[x]['version'] else ' -- ' , scans[x]['update'] if scans[x].has_key('update') and scans[x]['update'] else ' -- ']) 
           
     f.close()
     
-    print '\n\tCSV file dumped as: VTDL{0}.csv'.format(md5_hash)
+    print '\n\tCSV file dumped as: VTDL{0}.csv'.format(filename)
 
-def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit = False):
+def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = False, not_exit = False):
   
-  global csv_write
+  filename = ''
   
   if jdata['response_code'] != 1:
     
@@ -219,10 +218,12 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
    
   if url_report:
       if jdata.get('url') : print '\nScanned url :\n\t {url}'.format(url = jdata['url'])
+      filename = urlparse(jdata['url']).netloc
   
   else:
     if not verbose:
       get_detections(jdata['scans'])
+      filename = jdata['md5']
       
     print '\n\tResults for MD5    : {0}'.format(jdata['md5'])
     print '\tResults for SHA1   : {0}'.format(jdata['sha1'])
@@ -240,7 +241,7 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
             result_len   = 55
             result_align = 'l' 
             
-        plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- ', jdata['scans'][x]['version'] if jdata['scans'][x]['version'] else ' -- ' , jdata['scans'][x]['update']])
+        plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- ', jdata['scans'][x]['version'] if jdata['scans'][x].has_key('version') and jdata['scans'][x]['version'] else ' -- ' , jdata['scans'][x]['update'] if jdata['scans'][x].has_key('update') and jdata['scans'][x]['update'] else ' -- '])
 
     pretty_print_special(plist, ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'], [30, 9, result_len, 14, 12], ['r', 'c', result_align, 'c', 'c'])
       
@@ -250,7 +251,7 @@ def parse_report(jdata, hash_report, verbose, dump, url_report = False, not_exit
     jsondump(jdata, hash_report)
 
   if csv_write:
-      dump_csv(jdata['md5'], jdata['scans'])
+      dump_csv(filename, jdata['scans'])
 
   if jdata.get('permalink') : print "\n\tPermanent Link : {0}\n".format(jdata['permalink'])
   
@@ -326,7 +327,7 @@ class vtAPI():
         self.api   = apikey
         self.base  = 'https://www.virustotal.com/vtapi/v2/'
     
-    def getReport(self, hash_report, allinfo = False, verbose = False, dump = False, not_exit = False):
+    def getReport(self, hash_report, allinfo = False, verbose = False, dump = False, csv_write = False, not_exit = False):
       
       """
       A md5/sha1/sha256 hash will retrieve the most recent report on a given sample. You may also specify a scan_id (sha256-timestamp as returned by the file upload API)
@@ -461,7 +462,7 @@ class vtAPI():
           return True
       
       else:
-          result = parse_report(jdata, hash_report, verbose, dump, False, not_exit)
+          result = parse_report(jdata, hash_report, verbose, dump, csv_write, False, not_exit)
           return result
     
     def rescan(self, hash_rescan, date = False, period = False, repeat = False, notify_url = False, notify_changes_only = False, delete = False):
@@ -522,7 +523,7 @@ class vtAPI():
               if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata_part['sha256'])
               if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
     
-    def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, scan = False):
+    def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, csv_write = False, scan = False):
 
         """
         Allows to send a file to be analysed by VirusTotal.
@@ -556,7 +557,7 @@ class vtAPI():
           
             not_exit = True
           
-            result = self.getReport(md5, False, verbose, dump, not_exit)
+            result = self.getReport(md5, False, verbose, dump, csv_write, not_exit)
             
             if not result and scan == True:
                   
@@ -595,7 +596,7 @@ class vtAPI():
             elif not result and scan == False:
                   print 'Report for file : {0} not fount'.format(submit_file)
     
-    def url_scan_and_report(self, urls, key, verbose, dump=False, add_to_scan='0'):
+    def url_scan_and_report(self, urls, key, verbose, dump=False, csv_write=False, add_to_scan='0'):
         
         """
         Url scan:
@@ -708,7 +709,7 @@ class vtAPI():
               
               if key == 'report':
                       url_report = True
-                      parse_report(jdata, md5, verbose, dump, url_report)
+                      parse_report(jdata, md5, verbose, dump, csv_write, url_report)
                       
               elif key == 'scan':
                   if jdata.get('verbose_msg') : print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg  = jdata['verbose_msg'], url = jdata['url'])
@@ -1394,9 +1395,6 @@ def main(apikey):
   dist.add_argument('--massive-download', action='store_true', default=False, help='Show information how to get massive download work')
     
   options = opt.parse_args()
- 
-  global csv_write
-  csv_write = options.csv
   
   #it's just a check, if you want set your apikey into value, go to the end of file
   if apikey == '<--------------apikey-here-------->': 
@@ -1418,13 +1416,13 @@ def main(apikey):
                             options.detected_downloaded_samples   = options.behavior_network = options.behavior_process        = options.behavior_summary = True
   
   if options.files:
-    vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump, scan = True)
+    vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump, options.csv, scan = True)
   
   elif options.file_search:
-      vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump)
+      vt.fileScan(options.value, options.verbose, options.notify_url, options.notify_changes_only, options.dump, options.csv)
   
   elif options.url_scan and not options.url_report: 
-    vt.url_scan_and_report(options.value, "scan", options.verbose, options.dump)
+    vt.url_scan_and_report(options.value, "scan", options.verbose, options.dump, options.csv)
   
   elif options.url_report:
       action = 0
@@ -1432,7 +1430,7 @@ def main(apikey):
       if options.url_scan:
             action = 1
       
-      vt.url_scan_and_report(options.value, "report", options.verbose, options.dump, action)
+      vt.url_scan_and_report(options.value, "report", options.verbose, options.dump, options.csv, action)
     
   elif options.rescan:
       
@@ -1459,10 +1457,10 @@ def main(apikey):
              options.detected_communicated, options.undetected_communicated)
   
   elif options.report_all_info:
-      vt.getReport(options.value, '1', options.verbose, options.dump)
+      vt.getReport(options.value, '1', options.verbose, options.dump, )
                    
   elif options.search and not options.domain and not options.ip and not options.url_scan and not options.url_report:
-    vt.getReport(options.value, '0', options.verbose, options.dump)
+    vt.getReport(options.value, '0', options.verbose, options.dump, options.csv)
 
   elif options.download:
       vt.download(options.value[0], 'file')
