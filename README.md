@@ -13,6 +13,10 @@ Before using the tool you must set your api key near the end of the file or in ~
  
 These can be installed via PIP or a package manager.
 
+**23.03.2014:**
+
+* Table improvement, now result show is more prettiest, column sizes adjustment
+
 **12.03.2014:**
 
 * Added option --csv, which permit dump AVs result into csv file
