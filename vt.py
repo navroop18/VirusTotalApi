@@ -28,6 +28,50 @@ def private_api_access_error():
       print '\n[!] You don\'t have permission for this operation, Looks like you trying to access to PRIVATE API functions\n'
       sys.exit()
 
+def get_adequate_table_sizes(scans, short = False, short_list = False):
+      
+      av_size     = 0
+      result_size = 0
+      version     = 0
+      
+      for engine in scans:
+            
+            if scans.get(engine) and scans[engine].get('result'):
+            
+                  if short and engine in short_list:
+                  
+                        if len(engine) < 30 and len(engine) > av_size:
+                            av_size = len(engine)
+                        
+                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
+                            result_size = len(scans[engine]['result'])
+                            
+                        if scans[engine].has_key('version') and scans[engine]['version']:
+                              
+                              if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
+                                    version = len(scans[engine]['version'])
+                                    
+                        else:
+                            version = 8
+            
+                  elif not short:
+                        
+                        if len(engine) < 30 and len(engine) > av_size:
+                            av_size = len(engine)
+                        
+                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
+                            result_size = len(scans[engine]['result'])
+                            
+                        if scans[engine].has_key('version') and scans[engine]['version']:
+                              
+                              if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
+                                    version = len(scans[engine]['version'])
+                                    
+                        else:
+                            version = 8      
+                        
+      return av_size, result_size, version
+
 def parse_conf(file_name):
       
       try:
@@ -174,18 +218,19 @@ def get_detections(scans):
 
       for engine in engines:
           if scans.get(engine) and scans[engine].get('result'):
-              plist.append([engine, scans[engine]['result']])
+              plist.append([engine, scans[engine]['result'], scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' , scans[engine]['update'] if scans[engine].has_key('update') and scans[engine]['update'] else ' -- '])
               cont -= 1
       
       for engine in scans:
             if scans.get(engine) and scans[engine].get('result') and cont > 0:
-                  plist.append([engine, scans[engine]['result']])
+                  plist.append([engine, scans[engine]['result'], scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' , scans[engine]['update'] if scans[engine].has_key('update') and scans[engine]['update'] else ' -- '])
                   cont -= 1
             
             elif cont == 0:
                   break
       if cont != 3:
-            pretty_print_special(plist, ['Vendor name',  'Result'], [30, 55], ['r', 'l'])
+            av_size, result_size, version = get_adequate_table_sizes(scans, True, ['Sophos', 'Kaspersky', 'TrendMicro'])
+            pretty_print_special(plist, ['Vendor name',  'Result', 'Version', 'Last Update'], [av_size, result_size, version, 12], ['r', 'l', 'l', 'c'])
 
 def dump_csv(filename, scans):
       
@@ -234,16 +279,18 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
     plist = [[]]
     
     for x in sorted(jdata['scans']):
-        if not jdata['scans'][x]['result']:
-            result_len   = 6
-            result_align = 'c' 
-        else:
-            result_len   = 55
-            result_align = 'l' 
             
         plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- ', jdata['scans'][x]['version'] if jdata['scans'][x].has_key('version') and jdata['scans'][x]['version'] else ' -- ' , jdata['scans'][x]['update'] if jdata['scans'][x].has_key('update') and jdata['scans'][x]['update'] else ' -- '])
-
-    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'], [30, 9, result_len, 14, 12], ['r', 'c', result_align, 'c', 'c'])
+    
+    av_size, result_size, version = get_adequate_table_sizes(jdata['scans'])
+    
+    if version == 8:
+      version_align = 'c'
+      
+    else:
+      version_align = 'l'
+      
+    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'], [av_size, 9, result_size, version, 12], ['r', 'c', 'l', version_align, 'c'])
       
     del plist        
 
