@@ -211,26 +211,38 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
 
 def get_detections(scans):
       
-      
       plist   = [[]]
       engines = ['Sophos', 'Kaspersky', 'TrendMicro']
       cont    = 3
 
       for engine in engines:
           if scans.get(engine) and scans[engine].get('result'):
-              plist.append([engine, scans[engine]['result'], scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' , scans[engine]['update'] if scans[engine].has_key('update') and scans[engine]['update'] else ' -- '])
+              plist.append([engine,
+                            scans[engine]['result'],
+                            scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' ,
+                            scans[engine]['update']  if scans[engine].has_key('update')  and scans[engine]['update']  else ' -- '
+                           ])
               cont -= 1
       
       for engine in scans:
             if scans.get(engine) and scans[engine].get('result') and cont > 0:
-                  plist.append([engine, scans[engine]['result'], scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' , scans[engine]['update'] if scans[engine].has_key('update') and scans[engine]['update'] else ' -- '])
+                  plist.append([engine,
+                                scans[engine]['result'],
+                                scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' ,
+                                scans[engine]['update']  if scans[engine].has_key('update')  and scans[engine]['update']  else ' -- '
+                               ])
                   cont -= 1
             
             elif cont == 0:
                   break
+            
       if cont != 3:
             av_size, result_size, version = get_adequate_table_sizes(scans, True, ['Sophos', 'Kaspersky', 'TrendMicro'])
-            pretty_print_special(plist, ['Vendor name',  'Result', 'Version', 'Last Update'], [av_size, result_size, version, 12], ['r', 'l', 'l', 'c'])
+            pretty_print_special(plist,
+                                 ['Vendor name',  'Result', 'Version', 'Last Update'],
+                                 [av_size, result_size, version, 12],
+                                 ['r', 'l', 'l', 'c']
+                                )
 
 def dump_csv(filename, scans):
       
@@ -239,7 +251,11 @@ def dump_csv(filename, scans):
     writer.writerow(('Vendor name', 'Detected', 'Result', 'Version', 'Last Update'))
       
     for x in sorted(scans):
-      writer.writerow([x, 'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ', scans[x]['version'] if scans[x].has_key('version') and scans[x]['version'] else ' -- ' , scans[x]['update'] if scans[x].has_key('update') and scans[x]['update'] else ' -- ']) 
+      writer.writerow([x,
+                       'True' if scans[x]['detected'] else 'False', scans[x]['result'] if scans[x]['result'] else ' -- ',
+                       scans[x]['version'] if scans[x].has_key('version') and scans[x]['version'] else ' -- ' ,
+                       scans[x]['update']  if scans[x].has_key('update')  and scans[x]['update']  else ' -- '
+                      ]) 
           
     f.close()
     
@@ -280,7 +296,12 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
     
     for x in sorted(jdata['scans']):
             
-        plist.append([x, 'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result'] if jdata['scans'][x]['result'] else ' -- ', jdata['scans'][x]['version'] if jdata['scans'][x].has_key('version') and jdata['scans'][x]['version'] else ' -- ' , jdata['scans'][x]['update'] if jdata['scans'][x].has_key('update') and jdata['scans'][x]['update'] else ' -- '])
+        plist.append([x,
+                      'True' if jdata['scans'][x]['detected'] else 'False',
+                      jdata['scans'][x]['result']  if jdata['scans'][x]['result'] else ' -- ',
+                      jdata['scans'][x]['version'] if jdata['scans'][x].has_key('version') and jdata['scans'][x]['version'] else ' -- ' ,
+                      jdata['scans'][x]['update']  if jdata['scans'][x].has_key('update')  and jdata['scans'][x]['update']  else ' -- '
+                     ])
     
     av_size, result_size, version = get_adequate_table_sizes(jdata['scans'])
     
@@ -289,9 +310,21 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
       
     else:
       version_align = 'l'
-      
-    pretty_print_special(plist, ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'], [av_size, 9, result_size, version, 12], ['r', 'c', 'l', version_align, 'c'])
-      
+    
+    if av_size != 0 and result_size != 0 and version != 0:      
+      pretty_print_special(plist,
+                           ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'],
+                           [av_size, 9, result_size, version, 12],
+                           ['r', 'c', 'l', version_align, 'c']
+                           )
+    
+    else:
+      pretty_print_special(plist,
+                           ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'],
+                           [30, 9, 6, 15, 12],
+                           ['r', 'c', 'l', version_align, 'c']
+                           )
+
     del plist        
 
   if dump == True:
@@ -476,7 +509,11 @@ class vtAPI():
                   del plist
             
             if jdata['additional_info'].get('sections'):
-                pretty_print_special(jdata['additional_info']['sections'], ['Name', 'Virtual address', 'Virtual size', 'Raw size', 'Entropy', 'MD5'], [10,10,10,10,10, 35], ['c', 'c', 'c', 'c', 'c', 'c'])
+                pretty_print_special(jdata['additional_info']['sections'],
+                                     ['Name', 'Virtual address', 'Virtual size', 'Raw size', 'Entropy', 'MD5'],
+                                     [10,10,10,10,10, 35],
+                                     ['c', 'c', 'c', 'c', 'c', 'c']
+                                    )
             
             if jdata['additional_info'].get('imports'):
             
@@ -501,7 +538,10 @@ class vtAPI():
             for x in jdata['scans']:
                plist.append([x,  'True' if jdata['scans'][x]['detected'] else 'False', jdata['scans'][x]['result']])
            
-            pretty_print_special(plist, ['Name', 'Detected', 'Result'], [30, 9, 55], ['l', 'c', 'l'])
+            pretty_print_special(plist,
+                                 ['Name', 'Detected', 'Result'],
+                                 [30, 9, 55],
+                                 ['l', 'c', 'l'])
             
             del plist
             
