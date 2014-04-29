@@ -245,8 +245,8 @@ def get_detections(scans):
                                 )
 
 def dump_csv(filename, scans):
-      
-    f = open('VTDL{0}.csv'.format(filename), 'wt')
+    print filename
+    f = open('VTDL{0}.csv'.format(filename), 'w')
     writer = csv.writer(f, delimiter=',')
     writer.writerow(('Vendor name', 'Detected', 'Result', 'Version', 'Last Update'))
       
@@ -279,12 +279,10 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
    
   if url_report:
       if jdata.get('url') : print '\nScanned url :\n\t {url}'.format(url = jdata['url'])
-      filename = urlparse(jdata['url']).netloc
   
   else:
     if not verbose:
       get_detections(jdata['scans'])
-      filename = jdata['md5']
       
     print '\n\tResults for MD5    : {0}'.format(jdata['md5'])
     print '\tResults for SHA1   : {0}'.format(jdata['sha1'])
@@ -331,6 +329,7 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
     jsondump(jdata, hash_report)
 
   if csv_write:
+      filename = jdata['md5']
       dump_csv(filename, jdata['scans'])
 
   if jdata.get('permalink') : print "\n\tPermanent Link : {0}\n".format(jdata['permalink'])
@@ -1591,6 +1590,5 @@ if __name__ == '__main__':
     You can especificate apikey as value or put it to config file
     '''
     
-    apikey = '<--------------apikey-here-------->'
-        
+    apikey = '<--------------apikey-here-------->'   
     main(apikey)
