@@ -13,6 +13,11 @@ Before using the tool you must set your api key near the end of the file or in ~
  
 These can be installed via PIP or a package manager.
 
+
+**29.04.2014:**
+
+*Bug fix related with csv dumps
+
 **23.03.2014:**
 
 * Table improvement, now result show is more prettiest, column sizes adjustment
