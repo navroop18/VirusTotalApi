@@ -190,7 +190,7 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
         
         print '\n[+] Latest undetected files that were downloaded from this domain/ip\n'
         pretty_print(sorted(jdata['undetected_downloaded_samples'], key=methodcaller('get', 'date'), reverse=True), ['positives', 'total','date','sha256'], [15, 10, 20, 70], ['c', 'c', 'c', 'c'])
-            
+
     
     if jdata.get('detected_communicating_samples') and detected_communicated:
         
@@ -206,8 +206,12 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
       
     if jdata.get('detected_urls') and detected_urls:
         
+        url_size = max(map(lambda url: len(url['url']), jdata['detected_urls']))
+        if url_size > 100:
+            url_size = 60
+            
         print '\n[+] Latest detected URLs\n'
-        pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total','scan_date','url'], [15, 10, 20, 100], ['c', 'c', 'c', 'l'])
+        pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total','scan_date','url'], [15, 10, 20, url_size], ['c', 'c', 'c', 'l'])
 
 def get_detections(scans):
       
@@ -261,7 +265,7 @@ def dump_csv(filename, scans):
     
     print '\n\tCSV file dumped as: VTDL{0}.csv'.format(filename)
 
-def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = False, not_exit = False):
+def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = False, not_exit = False, ufilename = False):
   
   filename = ''
   
@@ -273,6 +277,8 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
     else:
       print '\n[-] Status : {info}\n'.format(info=jdata['verbose_msg'])
       sys.exit()
+  
+  if ufilename: print '\nLooking for:\n\t{0}'.format(ufilename)
   
   if jdata.get('scan_date') : print '\nScanned on : \n\t{0}'.format(jdata['scan_date'])
   if jdata.get('total') : print '\nDetections:\n\t {positives}/{total} Positives/Total'.format(positives = jdata['positives'], total = jdata['total'])
@@ -406,7 +412,7 @@ class vtAPI():
         self.api   = apikey
         self.base  = 'https://www.virustotal.com/vtapi/v2/'
     
-    def getReport(self, hash_report, allinfo = False, verbose = False, dump = False, csv_write = False, not_exit = False):
+    def getReport(self, hash_report, allinfo = False, verbose = False, dump = False, csv_write = False, not_exit = False, filename = False):
       
       """
       A md5/sha1/sha256 hash will retrieve the most recent report on a given sample. You may also specify a scan_id (sha256-timestamp as returned by the file upload API)
@@ -548,7 +554,7 @@ class vtAPI():
           return True
       
       else:
-          result = parse_report(jdata, hash_report, verbose, dump, csv_write, False, not_exit)
+          result = parse_report(jdata, hash_report, verbose, dump, csv_write, False, not_exit, filename)
           return result
     
     def rescan(self, hash_rescan, date = False, period = False, repeat = False, notify_url = False, notify_changes_only = False, delete = False):
@@ -642,16 +648,14 @@ class vtAPI():
             md5    = hashlib.md5(readed).hexdigest()
           
             not_exit = True
-          
-            result = self.getReport(md5, False, verbose, dump, csv_write, not_exit)
+            
+            result = self.getReport(md5, False, verbose, dump, csv_write, not_exit, submit_file)
             
             if not result and scan == True:
                   
                   if (os.path.getsize(submit_file) / 1048576) <= 32:
                         
                     if os.path.isfile(submit_file):
-                        
-                      print 'Submiting file: {filename}'.format(filename = submit_file)
       
                       file_name = os.path.split(submit_file)[-1]
                       files  = {"file": (file_name, open(submit_file, 'rb'))}
@@ -677,8 +681,7 @@ class vtAPI():
 
                   else:
                     print '[!] Ignored file: {file}'.format(file = submit_file)
-                  
-                    
+                        
             elif not result and scan == False:
                   print 'Report for file : {0} not fount'.format(submit_file)
     
@@ -825,7 +828,6 @@ class vtAPI():
         
           jdata, response = get_response(url, params=params)
 
-             
       if jdata['response_code'] == 0 or jdata['response_code'] == -1:
           if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
           sys.exit()  
@@ -838,7 +840,7 @@ class vtAPI():
               pretty_print(sorted(jdata['detected_downloaded_samples'], key=methodcaller('get', 'date'), reverse=True), ['positives', 'total','date','sha256'], [15, 10, 20, 70], ['c', 'c', 'c', 'c'])
             
           print_results(jdata, undetected_downloaded_samples, detected_communicated, undetected_communicated, detected_urls)
-            
+          
           if jdata.get('resolutions'):
               print '\n[+] Lastest domain resolved\n'
               pretty_print(sorted(jdata['resolutions'], key=methodcaller('get', 'last_resolved'), reverse=True), ['last_resolved', 'hostname'])
