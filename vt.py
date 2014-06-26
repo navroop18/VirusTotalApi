@@ -562,24 +562,27 @@ class vtAPI():
         """
         This API allows you to rescan files in VirusTotal's file store without having to resubmit them, thus saving bandwidth.
         """
-        
         if len(hash_rescan) == 1:
             hash_rescan = hash_rescan
         
-        elif isinstance(hash_re, basestring):
+        elif isinstance(hash_rescan, basestring):
             hash_rescan = [hash_rescan]
         
         elif len(hash_rescan) > 25 and not isinstance(hash_rescan, basestring):
-            print '[-] To many urls for scanning, MAX 25'
-            sys.exit()
+            print '[-] To many urls for scanning, MAX 25, cut to only 25 first urls'
+            hash_rescan = hash_rescan[:25]
         
         else:
-            hash_rescan = ', '.join(map(lambda hash_part: hash_part, hash_rescan))
+            if not os.path.exists(hash_rescan[0]):
+                hash_rescan = ', '.join(map(lambda hash_part: hash_part, hash_rescan))
         
         url = self.base + 'file/rescan'      
         
         for hash_part in hash_rescan:
-            
+
+            if os.path.exists(hash_part):
+                 hash_part = [hashlib.md5(open(hash_part, 'rb').read()).hexdigest()] 
+
             params  = {'resource':hash_part,'apikey':self.api}
             
             if delete:
@@ -599,22 +602,25 @@ class vtAPI():
           
                     if notify_changes_only:
                       params.setdefault('notify_changes_only',notify_changes_only)
+                    
+            jdatas, response = get_response(url, params=params, method='post')
+            
+            if not isinstance(jdatas, list):
+                  jdatas = [jdatas]
+            
+            for jdata in jdatas:
                   
-            
-            jdata, response = get_response(url, params=params, method='post')
-            
-            if jdata['response_code'] == 0 or jdata['response_code'] == -1:
-              if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
-              sys.exit()
-            
-            if isinstance(jdata, list):
-                for jdata_part in jdata:
-                  if jdata_part.get('sha256') : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata_part['sha256'])
-                  if jdata.get('permalink')   : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
-            else:
-              if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata_part['sha256'])
-              if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
-    
+                  if jdata['response_code'] == 0 or jdata['response_code'] == -1:
+                    if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
+                  
+                  if isinstance(jdata, list):
+                      for jdata_part in jdata:
+                        if jdata_part.get('sha256') : print '\n[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}\n'.format(sha256 = jdata_part['sha256'])
+                        if jdata.get('permalink')   : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
+                  else:
+                    if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata['sha256'])
+                    if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
+          
     def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, csv_write = False, scan = False):
 
         """
@@ -1428,7 +1434,7 @@ def main(apikey):
   opt.add_argument('--csv',           action='store_true',                 help='Dumps the AV\'s detections to file (VTDL{md5}.csv)')
   
   rescan = opt.add_argument_group('Rescan options')
-  rescan.add_argument('-r', '--rescan', action='store_true',              help='Allows you to rescan files in VirusTotal\'s file store without having to resubmit them, thus saving bandwidth., support space separated list, MAX 25 hashes')
+  rescan.add_argument('-r', '--rescan', action='store_true',              help='Allows you to rescan files in VirusTotal\'s file store without having to resubmit them, thus saving bandwidth, support space separated list, MAX 25 hashes, can be local files, hashes will be generated on the fly, support linux wildmask')
   rescan.add_argument('--delete',       action='store_true',              help='PRIVATE API ONLY! A md5/sha1/sha256 hash for which you want to delete the scheduled scan')
   rescan.add_argument('--date',         action='store',      dest='date', help='PRIVATE API ONLY! A Date in one of this formats (example: 20120725170000 or 2012-07-25 17 00 00 or 2012-07-25 17:00:00) in which the rescan should be performed. If not specified the rescan will be performed immediately.')
   rescan.add_argument('--period',       action='store',                   help='PRIVATE API ONLY! Period in days in which the file should be rescanned. If this argument is provided the file will be rescanned periodically every period days, if not, the rescan is performed once and not repated again.')
