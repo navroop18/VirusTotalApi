@@ -633,10 +633,14 @@ class vtAPI():
         """
 
         if len(files) == 1 and isinstance(files, list):
-            files = glob.glob('{files}'.format(files=files[0]))
+            
+            if isinstance(files[0], basestring):
+                  files = files
+            else:
+                files = glob.glob('{files}'.format(files=files[0]))
         
         elif isinstance(files, basestring):
-            files = glob.glob('{files}'.format(files=files))
+            files = glob.glob('{files}'.format(files=files)) 
       
         params = {'apikey':self.api}
         
@@ -649,10 +653,13 @@ class vtAPI():
         url = self.base+'file/scan'
 
         for submit_file in files:
-
-            readed = open(submit_file, 'rb').read()
-            md5    = hashlib.md5(readed).hexdigest()
-          
+            
+            if os.path.exists(submit_file):
+                  readed = open(submit_file, 'rb').read()
+                  md5    = hashlib.md5(readed).hexdigest()
+            else:
+                  md5 = submit_file
+                  
             not_exit = True
             
             result = self.getReport(md5, False, verbose, dump, csv_write, not_exit, submit_file)
