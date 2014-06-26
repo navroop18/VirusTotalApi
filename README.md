@@ -18,10 +18,15 @@ apikey=your-apikey-here
  
 These can be installed via PIP or a package manager.
 
+**26.06.2014:**
+
+* Now show file name when scan/search file
+* In file-search option can now be used md5 hash
+* Rescan option now support wildcard, for example samples/*, will generate file hash in the fly
 
 **29.04.2014:**
 
-*Bug fix related with csv dumps
+* Bug fix related with csv dumps
 
 **23.03.2014:**
 
