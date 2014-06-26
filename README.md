@@ -6,6 +6,11 @@ https://www.virustotal.com/en/documentation/public-api/
 
 Before using the tool you must set your api key near the end of the file or in ~.vtapi.
 
+* ~.vtapi file content:
+```python
+[vt]
+apikey=your-apikey-here
+```
 **Dependencies:**
  *  requests
  *  texttable
