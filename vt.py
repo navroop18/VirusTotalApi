@@ -207,8 +207,8 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
     if jdata.get('detected_urls') and detected_urls:
         
         url_size = max(map(lambda url: len(url['url']), jdata['detected_urls']))
-        if url_size > 100:
-            url_size = 60
+        if url_size > 130:
+            url_size = 130
             
         print '\n[+] Latest detected URLs\n'
         pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total','scan_date','url'], [15, 10, 20, url_size], ['c', 'c', 'c', 'l'])
@@ -613,13 +613,10 @@ class vtAPI():
                   if jdata['response_code'] == 0 or jdata['response_code'] == -1:
                     if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
                   
-                  if isinstance(jdata, list):
-                      for jdata_part in jdata:
-                        if jdata_part.get('sha256') : print '\n[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}\n'.format(sha256 = jdata_part['sha256'])
-                        if jdata.get('permalink')   : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
                   else:
-                    if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata['sha256'])
-                    if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
+                      if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata['sha256'])
+                      print '\n Rescaning file/hash:\n\t {0}\n '.format(hash_part[0])
+                      if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
           
     def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, csv_write = False, scan = False):
 
@@ -835,7 +832,7 @@ class vtAPI():
             dump  = False
             md5   = ''
       
-      else:
+      else:  
           params  = {'ip':ip,'apikey':self.api}
           url     = self.base + 'ip-address/report'
         
@@ -868,7 +865,7 @@ class vtAPI():
            
     def getDomain(self, domain, dump=False, trendmicro=False, detected_urls=False, undetected_downloaded_samples=False, alexa_domain_info=False,\
                   wot_domain_info=False, websense_threatseeker=False, bitdefender=False, webutation_domain=False,\
-                                         detected_communicated=False, undetected_communicated=False, pcaps=False):
+                                         detected_communicated=False, undetected_communicated=False, pcaps=False, getIp_data=False):
         
         """
         Get domain last scan, detected urls and resolved IPs
