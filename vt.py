@@ -865,7 +865,7 @@ class vtAPI():
            
     def getDomain(self, domain, dump=False, trendmicro=False, detected_urls=False, undetected_downloaded_samples=False, alexa_domain_info=False,\
                   wot_domain_info=False, websense_threatseeker=False, bitdefender=False, webutation_domain=False,\
-                                         detected_communicated=False, undetected_communicated=False, pcaps=False, getIp_data=False):
+                                         detected_communicated=False, undetected_communicated=False, pcaps=False):
         
         """
         Get domain last scan, detected urls and resolved IPs
