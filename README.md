@@ -17,6 +17,10 @@ apikey=your-apikey-here
  *  python-dateutils
  
 These can be installed via PIP or a package manager.
+Example of installing all dependencies using pip:
+```python
+pip install -r requirements.txt
+```
 
 **26.06.2014:**
 
