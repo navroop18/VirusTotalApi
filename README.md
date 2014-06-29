@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 * Now show file name when scan/search file
 * In file-search option can now be used md5 hash
-* Rescan option now support wildcard, for example samples/*, will generate file hash in the fly
+* Rescan option now support wildcard, for example samples/*, will generate file hash on the fly
 
 **29.04.2014:**
 
