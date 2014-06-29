@@ -572,10 +572,6 @@ class vtAPI():
             print '[-] To many urls for scanning, MAX 25, cut to only 25 first urls'
             hash_rescan = hash_rescan[:25]
         
-        else:
-            if not os.path.exists(hash_rescan[0]):
-                hash_rescan = ', '.join(map(lambda hash_part: hash_part, hash_rescan))
-        
         url = self.base + 'file/rescan'      
         
         for hash_part in hash_rescan:
@@ -615,7 +611,7 @@ class vtAPI():
                   
                   else:
                       if jdata.get('sha256')    : print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256 = jdata['sha256'])
-                      print '\n Rescaning file/hash:\n\t {0}\n '.format(hash_part[0])
+                      print '\n Rescaning file/hash: {0}\n '.format(hash_part)
                       if jdata.get('permalink') : print '\tPermanent link : {permalink}\n'.format(permalink = jdata['permalink'])
           
     def fileScan(self, files, verbose = False, notify_url = False, notify_changes_only = False, dump = False, csv_write = False, scan = False):
