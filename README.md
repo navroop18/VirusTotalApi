@@ -24,6 +24,11 @@ pip install -r requirements.txt
 
 **26.06.2014:**
 
+* Search bug fixed
+* Domain search (-d) now can be used scheme search like this http://domain.com, urlparse will extract domain
+
+**26.06.2014:**
+
 * Now show file name when scan/search file
 * In file-search option can now be used md5 hash
 * Rescan option now support wildcard, for example samples/*, will generate file hash on the fly
