@@ -36,40 +36,49 @@ def get_adequate_table_sizes(scans, short = False, short_list = False):
       
       for engine in scans:
             
-            if scans.get(engine) and scans[engine].get('result'):
+            if scans.has_key(engine) and scans[engine].has_key('result'):
             
-                  if short and engine in short_list:
+                if short and engine in short_list:
                   
-                        if len(engine) < 30 and len(engine) > av_size:
-                            av_size = len(engine)
-                        
+                    if len(engine) < 30 and len(engine) > av_size:
+                        av_size = len(engine)
+
+                    if scans[engine]['result'] is not None:
+                            
                         if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
                             result_size = len(scans[engine]['result'])
-                            
-                        if scans[engine].has_key('version') and scans[engine]['version']:
+                                
+                    if scans[engine].has_key('version') and scans[engine]['version']:
                               
-                              if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
-                                    version = len(scans[engine]['version'])
+                        if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
+                            version = len(scans[engine]['version'])
+                                    
+                    else:
+                        version = 8
+                        
+                elif not short:
+                        
+                    if len(engine) < 30 and len(engine) > av_size:
+                        av_size = len(engine)
+                    
+                    if scans[engine]['result'] is not None:
+                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
+                            result_size = len(scans[engine]['result'])
+                        else:
+                            result_size = 50
+                    else:
+                        result_size = 50
+                                
+                    if scans[engine].has_key('version') and scans[engine]['version']:
+                              
+                        if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
+                            version = len(scans[engine]['version'])
                                     
                         else:
                             version = 8
-            
-                  elif not short:
-                        
-                        if len(engine) < 30 and len(engine) > av_size:
-                            av_size = len(engine)
-                        
-                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
-                            result_size = len(scans[engine]['result'])
-                            
-                        if scans[engine].has_key('version') and scans[engine]['version']:
-                              
-                              if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
-                                    version = len(scans[engine]['version'])
-                                    
-                        else:
-                            version = 8      
-                        
+                    else:
+                            version = 8
+        
       return av_size, result_size, version
 
 def parse_conf(file_name):
@@ -219,6 +228,7 @@ def get_detections(scans):
       plist   = [[]]
       engines = ['Sophos', 'Kaspersky', 'TrendMicro']
       cont    = 3
+      other_engines = []
 
       for engine in engines:
           if scans.get(engine) and scans[engine].get('result'):
@@ -228,24 +238,26 @@ def get_detections(scans):
                             scans[engine]['update']  if scans[engine].has_key('update')  and scans[engine]['update']  else ' -- '
                            ])
               cont -= 1
+              other_engines.append(engine)
       
       for engine in scans:
-            if scans.get(engine) and scans[engine].get('result') and cont > 0:
-                  plist.append([engine,
-                                scans[engine]['result'],
-                                scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' ,
-                                scans[engine]['update']  if scans[engine].has_key('update')  and scans[engine]['update']  else ' -- '
-                               ])
-                  cont -= 1
-            
-            elif cont == 0:
-                  break
+        if scans.get(engine) and scans[engine].get('result') and cont > 0:
+            plist.append([engine,
+                scans[engine]['result'],
+                scans[engine]['version'] if scans[engine].has_key('version') and scans[engine]['version'] else ' -- ' ,
+                scans[engine]['update']  if scans[engine].has_key('update')  and scans[engine]['update']  else ' -- '
+            ])
+            cont -= 1
+            other_engines.append(engine)
+              
+        elif cont == 0:
+            break
             
       if cont != 3:
-            av_size, result_size, version = get_adequate_table_sizes(scans, True, ['Sophos', 'Kaspersky', 'TrendMicro'])
+            av_size, result_size, version = get_adequate_table_sizes(scans, True, other_engines)
             pretty_print_special(plist,
                                  ['Vendor name',  'Result', 'Version', 'Last Update'],
-                                 [av_size, result_size, version, 12],
+                                 [av_size, result_size, version, 11],
                                  ['r', 'l', 'l', 'c']
                                 )
 
@@ -289,7 +301,7 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
   
   else:
     if not verbose:
-      get_detections(jdata['scans'])
+       get_detections(jdata['scans'])
       
     print '\n\tResults for MD5    : {0}'.format(jdata['md5'])
     print '\tResults for SHA1   : {0}'.format(jdata['sha1'])
