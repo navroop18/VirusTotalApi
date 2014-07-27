@@ -22,7 +22,7 @@ Example of installing all dependencies using pip:
 pip install -r requirements.txt
 ```
 
-**26.06.2014:**
+**28.07.2014:**
 
 * Search bug fixed
 * Domain search (-d) now can be used scheme search like this http://domain.com, urlparse will extract domain
