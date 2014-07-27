@@ -205,13 +205,14 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
         
       
     if jdata.get('detected_urls') and detected_urls:
-        
+
         url_size = max(map(lambda url: len(url['url']), jdata['detected_urls']))
-        if url_size > 130:
-            url_size = 130
+        
+        if url_size > 100:
+            url_size = 100
             
         print '\n[+] Latest detected URLs\n'
-        pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total','scan_date','url'], [15, 10, 20, url_size], ['c', 'c', 'c', 'l'])
+        pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total', 'scan_date','url'], [9, 5, 20, url_size], ['c', 'c', 'c', 'l'])
 
 def get_detections(scans):
       
@@ -875,13 +876,17 @@ class vtAPI():
             md5   = ''
             
         else:
+            #avoiding regex, this will be quickly
+            if domain.startswith('http://') or domain.startswith('https://'):
+                domain = urlparse(domain).netloc
+                
             params  = {'domain':domain,'apikey':self.api}
             url    = self.base + "domain/report"
         
             jdata, response = get_response(url, params=params)
               
         if jdata['response_code'] == 0 or jdata['response_code'] == -1:
-          if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
+          if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg} : {domain}\n'.format(verb_msg = jdata['verbose_msg'], domain = domain)
           sys.exit()
         
         if jdata.get('response_code') and jdata['response_code'] == 1:
