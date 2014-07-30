@@ -1430,6 +1430,7 @@ class vtAPI():
 def main(apikey):
   opt=argparse.ArgumentParser('value',description='Scan/Search/ReScan/JSON parse')
 
+
   opt.add_argument('value', nargs='*', help='Enter the Hash, Path to File(s) or Url(s)')
   opt.add_argument('-c', '--config-file', action='store',  default='~/.vtapi', help='Path to configuration file')
   
@@ -1510,7 +1511,7 @@ def main(apikey):
   #it's just a check, if you want set your apikey into value, go to the end of file
   if apikey == '<--------------apikey-here-------->': 
 
-      apikey = parse_conf(options.config_file) 
+      apikey = parse_conf(os.path.expanduser(options.config_file)) 
       
       if apikey is None:
             sys.exit('No API key provided and cannot read ~/.vtapi. Specify an API key in vt.py or in ~/.vtapi or  in your file')
