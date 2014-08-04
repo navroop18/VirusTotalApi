@@ -22,6 +22,11 @@ Example of installing all dependencies using pip:
 pip install -r requirements.txt
 ```
 
+**04.08.2014:**
+
+* Ip search (-i) now can be used scheme search like this http://ip, urlparse will extract domain
+* Windows expand user home support added, thanks to @truekonrads
+
 **28.07.2014:**
 
 * Search bug fixed
