@@ -841,7 +841,11 @@ class vtAPI():
             dump  = False
             md5   = ''
       
-      else:  
+      else:        
+          #avoiding regex, this will be quickly
+          if ip.startswith(('http://', 'https://')):
+              ip = urlparse(ip).netloc
+         
           params  = {'ip':ip,'apikey':self.api}
           url     = self.base + 'ip-address/report'
         
@@ -889,7 +893,7 @@ class vtAPI():
             
         else:
             #avoiding regex, this will be quickly
-            if domain.startswith('http://') or domain.startswith('https://'):
+            if domain.startswith(('http://', 'https://')):
                 domain = urlparse(domain).netloc
                 
             params  = {'domain':domain,'apikey':self.api}
