@@ -30,56 +30,33 @@ def private_api_access_error():
 
 def get_adequate_table_sizes(scans, short = False, short_list = False):
       
-      av_size     = 0
-      result_size = 0
-      version     = 0
+        av_size_f = 14
+        result_f  = 6
+        version_f = 9
       
-      for engine in scans:
+        if scans:
             
-            if scans.has_key(engine) and scans[engine].has_key('result'):
+            #Result len
+            if short:
+                av_size = max(map(lambda engine: len(engine) if engine is not None and engine in short_list else 0, scans))
+                result  = max(map(lambda engine: len(scans[engine]['result'])  if scans[engine].has_key('result')  and scans[engine]['result']  is not None and engine in short_list else 0, scans))
+                version = max(map(lambda engine: len(scans[engine]['version']) if scans[engine].has_key('version') and scans[engine]['version'] is not None and engine in short_list else 0, scans))
             
-                if short and engine in short_list:
-                  
-                    if len(engine) < 30 and len(engine) > av_size:
-                        av_size = len(engine)
-
-                    if scans[engine]['result'] is not None:
-                            
-                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
-                            result_size = len(scans[engine]['result'])
-                                
-                    if scans[engine].has_key('version') and scans[engine]['version']:
-                              
-                        if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
-                            version = len(scans[engine]['version'])
-                                    
-                    else:
-                        version = 8
-                        
-                elif not short:
-                        
-                    if len(engine) < 30 and len(engine) > av_size:
-                        av_size = len(engine)
-                    
-                    if scans[engine]['result'] is not None:
-                        if len(scans[engine]['result']) < 50 and len(scans[engine]['result']) > result_size:
-                            result_size = len(scans[engine]['result'])
-                        else:
-                            result_size = 50
-                    else:
-                        result_size = 50
-                                
-                    if scans[engine].has_key('version') and scans[engine]['version']:
-                              
-                        if len(scans[engine]['version']) < 20 and len(scans[engine]['version']) > version:
-                            version = len(scans[engine]['version'])
-                                    
-                        else:
-                            version = 8
-                    else:
-                            version = 8
+            else:
+                av_size = max(map(lambda engine: len(engine) if engine is not None else 0, scans))
+                result  = max(map(lambda engine: len(scans[engine]['result'])  if scans[engine].has_key('result')  and scans[engine]['result']  is not None else 0, scans))
+                version = max(map(lambda engine: len(scans[engine]['version']) if scans[engine].has_key('version') and scans[engine]['version'] is not None else 0, scans))
+                
+            if result > result_f:
+                result_f = result
+                
+            if av_size > av_size_f:
+                av_size_f = av_size
+                
+            if version > version_f:
+                version_f = version
         
-      return av_size, result_size, version
+        return av_size_f, result_f, version_f
 
 def parse_conf(file_name):
       
@@ -183,13 +160,15 @@ def jsondump(jdata, md5):
 
 def load_file(file_path):
       
-      try:
-            log    = open(file_path, 'r').read()
-            jdata  =  json.loads(log)
-            return jdata
+      if file_path.endswith('.json'):
       
-      except TypeError:
-            print '\n[!] Check your json dump file\n'
+        try:
+              log    = open(file_path, 'r').read()
+              jdata  =  json.loads(log)
+              return jdata
+        
+        except TypeError:
+              print '\n[!] Check your json dump file\n'
  
 def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
                   undetected_communicated_samples, detected_urls):
@@ -217,8 +196,8 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,\
 
         url_size = max(map(lambda url: len(url['url']), jdata['detected_urls']))
         
-        if url_size > 100:
-            url_size = 100
+        if url_size > 80:
+            url_size = 80
             
         print '\n[+] Latest detected URLs\n'
         pretty_print(sorted(jdata['detected_urls'], key=methodcaller('get', 'scan_date'), reverse=True), ['positives', 'total', 'scan_date','url'], [9, 5, 20, url_size], ['c', 'c', 'c', 'l'])
@@ -321,27 +300,18 @@ def parse_report(jdata, hash_report, verbose, dump, csv_write, url_report = Fals
                      ])
     
     av_size, result_size, version = get_adequate_table_sizes(jdata['scans'])
-    
-    if version == 8:
+
+    if version == 9:
       version_align = 'c'
       
     else:
       version_align = 'l'
-    
-    if av_size != 0 and result_size != 0 and version != 0:      
-      pretty_print_special(plist,
+        
+    pretty_print_special(plist,
                            ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'],
                            [av_size, 9, result_size, version, 12],
                            ['r', 'c', 'l', version_align, 'c']
                            )
-    
-    else:
-      pretty_print_special(plist,
-                           ['Vendor name', 'Detected', 'Result', 'Version', 'Last Update'],
-                           [30, 9, 6, 15, 12],
-                           ['r', 'c', 'l', version_align, 'c']
-                           )
-
     del plist        
 
   if dump == True:
@@ -1467,18 +1437,18 @@ def main(apikey):
   scan_rescan.add_argument('--notify-changes-only', action='store_true', help='PRIVATE API ONLY! Used in conjunction with --notify-url. Indicates if POST notifications should be sent only if the scan results differ from the previous one.')
   
   domain_opt = opt.add_argument_group('Domain/IP shared verbose mode options, by default just show resolved IPs/Passive DNS')
-  domain_opt.add_argument('--alexa-domain-info',             action='store_true', default=False, help='Just Domain option: Show Alexa domain info')
-  domain_opt.add_argument('--wot-domain-info',               action='store_true', default=False, help='Just Domain option: Show WOT domain info')
-  domain_opt.add_argument('--trendmicro',                    action='store_true', default=False, help='Just Domain option: Show TrendMicro category info')
-  domain_opt.add_argument('--websense-threatseeker',         action='store_true', default=False, help='Just Domain option: Show Websense ThreatSeeker category')
-  domain_opt.add_argument('--bitdefender',                   action='store_true', default=False, help='Just Domain option: Show BitDefender category')
-  domain_opt.add_argument('--webutation-domain',             action='store_true', default=False, help='Just Domain option: Show Webutation domain info')
-  domain_opt.add_argument('--detected-urls',                 action='store_true', default=False, help='Just Domain option: Show latest detected URLs')
-  domain_opt.add_argument('--pcaps',                         action='store_true', default=False, help='Just Domain option: Show all pcaps hashes')
-  domain_opt.add_argument('--detected-downloaded-samples',   action='store_true', default=False, help='Domain/Ip options: Show latest detected files that were downloaded from this ip')
-  domain_opt.add_argument('--undetected-downloaded-samples', action='store_true', default=False, help='Domain/Ip options: Show latest undetected files that were downloaded from this domain/ip')
-  domain_opt.add_argument('--detected-communicated',         action='store_true', default=False, help='Domain/Ip Show latest detected files that communicate with this domain/ip')
-  domain_opt.add_argument('--undetected-communicated',       action='store_true', default=False, help='Domain/Ip Show latest undetected files that communicate with this domain/ip')
+  domain_opt.add_argument('-adi', '--alexa-domain-info',             action='store_true', default=False, help='Just Domain option: Show Alexa domain info')
+  domain_opt.add_argument('-wdi', '--wot-domain-info',               action='store_true', default=False, help='Just Domain option: Show WOT domain info')
+  domain_opt.add_argument('-tm',  '--trendmicro',                    action='store_true', default=False, help='Just Domain option: Show TrendMicro category info')
+  domain_opt.add_argument('-wt',  '--websense-threatseeker',         action='store_true', default=False, help='Just Domain option: Show Websense ThreatSeeker category')
+  domain_opt.add_argument('-bd',  '--bitdefender',                   action='store_true', default=False, help='Just Domain option: Show BitDefender category')
+  domain_opt.add_argument('-wd',  '--webutation-domain',             action='store_true', default=False, help='Just Domain option: Show Webutation domain info')
+  domain_opt.add_argument('-du',  '--detected-urls',                 action='store_true', default=False, help='Just Domain option: Show latest detected URLs')
+  domain_opt.add_argument('--pcaps',                                 action='store_true', default=False, help='Just Domain option: Show all pcaps hashes')
+  domain_opt.add_argument('-dds', '--detected-downloaded-samples',   action='store_true', default=False, help='Domain/Ip options: Show latest detected files that were downloaded from this ip')
+  domain_opt.add_argument('-uds', '--undetected-downloaded-samples', action='store_true', default=False, help='Domain/Ip options: Show latest undetected files that were downloaded from this domain/ip')
+  domain_opt.add_argument('-dc',  '--detected-communicated',         action='store_true', default=False, help='Domain/Ip Show latest detected files that communicate with this domain/ip')
+  domain_opt.add_argument('-uc',  '--undetected-communicated',       action='store_true', default=False, help='Domain/Ip Show latest undetected files that communicate with this domain/ip')
   
   behaviour = opt.add_argument_group('Behaviour options - PRIVATE API ONLY!')
   behaviour.add_argument('--behaviour', action='store_true',  help='The md5/sha1/sha256 hash of the file whose dynamic behavioural report you want to retrieve.\
@@ -1489,9 +1459,9 @@ def main(apikey):
                        appear under the behaviour-v1 property of the additional_info field in the JSON report.This API allows you to retrieve the full JSON report\
                        of the file\'s execution as outputted by the Cuckoo JSON report encoder.')
   
-  behaviour.add_argument('--behavior-network',     action='store_true', help='Show network activity')
-  behaviour.add_argument('--behavior-process',     action='store_true', help='Show processes')
-  behaviour.add_argument('--behavior-summary',     action='store_true', help='Show summary')
+  behaviour.add_argument('-bn', '--behavior-network',     action='store_true', help='Show network activity')
+  behaviour.add_argument('-bp', '--behavior-process',     action='store_true', help='Show processes')
+  behaviour.add_argument('-bs', '--behavior-summary',     action='store_true', help='Show summary')
   
 
   private = opt.add_argument_group('Additional PRIVATE API options')
