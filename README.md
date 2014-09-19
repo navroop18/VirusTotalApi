@@ -14,7 +14,7 @@ apikey=your-apikey-here
 **Dependencies:**
  *  requests
  *  texttable
- *  python-dateutils
+ *  python-dateutil
  
 These can be installed via PIP or a package manager.
 Example of installing all dependencies using pip:
