@@ -1098,10 +1098,10 @@ class vtAPI():
           name = 'VTDL_{hash}.pcap'.format(hash = hash_file)
           
         elif file_type == 'file':
-          jdata, response = get_response(self.base + 'file/download', params=params)
-            
-          if jdata['response_code'] == 0 or jdata['response_code'] == -1:
-            if jdata.get('verbose_msg') : print '\n[!] Status : {verb_msg}\n'.format(verb_msg = jdata['verbose_msg'])
+          _, response = get_response(self.base + 'file/download', params=params)
+
+          if response.status_code == 404:
+            print '\n[!] File not found\n'
             sys.exit()
           
           name = 'VTDL_{hash}.dangerous'.format(hash = hash_file)
