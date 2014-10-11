@@ -10,15 +10,12 @@ Before using the tool you must set your api key near the end of the file or in ~
 ```python
 [vt]
 apikey=your-apikey-here
-type=private
 ```
-* your type of api access, if private: type=private, if public, you can leave it empty, it will be automatically reconized as public
-
 **Dependencies:**
  *  requests
  *  texttable
- *  python-dateutil
-
+ *  python-dateutils
+ 
 These can be installed via PIP or a package manager.
 Example of installing all dependencies using pip:
 ```python
@@ -72,7 +69,7 @@ pip install -r requirements.txt
 * Added option for file(s) search, without submitting file.
 Now you don't need to get hash of file and search it in VT if you just want to get the report, check option -fs/--file-search
 
-* In search without verbose mode now if someone/all of Kaspersky/Sophos/TrendMicro
+* In search without verbose mode now if someone/all of Kaspersky/Sophos/TrendMicro 
 don't have results, you will see detections by others engines
 
 **16.11.2013 Updates:**
@@ -84,7 +81,7 @@ don't have results, you will see detections by others engines
 * Added support for get apikey from file, now you can put is as before into apikey value at line 1409 or put it to config file
 if api key not in value , will check by default ~/.vtapi, but you can put it to another file and use -c/--config-file option
 
-* Limit reached issue patched
+* Limit reached issue patched 
 
 special thanks to @kellewic and @urbanski
 
@@ -102,7 +99,7 @@ Some examples:<br />
 
 <pre><code>python vt.py -d google.com
 
-Status:          Domain found in dataset
+Status:          Domain found in dataset 
 
 [+] Passive DNS replication
 	2013-10-19 	74.125.142.100
@@ -113,8 +110,8 @@ Status:          Domain found in dataset
 	....
 
 
-python vt.py -u -ur cuatvientos.org
-Searching for url(s) report:
+python vt.py -u -ur cuatvientos.org   
+Searching for url(s) report: 
 	cuatvientos.org
 
 	Scanned on:           2013-10-23 18:11:02
@@ -123,9 +120,9 @@ Searching for url(s) report:
 	Status      : Scan finished, scan information embedded in this object
 	Scanned url : http://cuatvientos.org/
 
-	Permanent Link:      https://www.virustotal.com/url/9be15bbec0dacb3ec93c462998e0ea8017efd80353a38882a94e0d5dc906e3dc/analysis/1382551862/
-
-
+	Permanent Link:      https://www.virustotal.com/url/9be15bbec0dacb3ec93c462998e0ea8017efd80353a38882a94e0d5dc906e3dc/analysis/1382551862/ 	
+	
+	
 python vt.py -s 0a1ab00a6f0f7f886fa4ff48fc70a953
 
 	Scanned on:           2013-10-20 14:13:11
@@ -139,9 +136,9 @@ python vt.py -s 0a1ab00a6f0f7f886fa4ff48fc70a953
 	Results for SHA1:    0e734df1fbde65db130e4cf23577bdf8fde73ca8
 	Results for SHA256:  be9c0025b99f0f8c55f448ba619ba303fc65eba862cac65a00ea83d480e5efec
 
-	Permanent Link:      https://www.virustotal.com/file/be9c0025b99f0f8c55f448ba619ba303fc65eba862cac65a00ea83d480e5efec/analysis/1382278391/
-
-
+	Permanent Link:      https://www.virustotal.com/file/be9c0025b99f0f8c55f448ba619ba303fc65eba862cac65a00ea83d480e5efec/analysis/1382278391/ 
+	
+	
 usage: value [-h] [-f] [-u] [-ur] [-d] [-i] [-s] [--report-all-info] [-ac]
              [-gc] [--get-comments-before DATE] [-v] [-j] [-r] [--delete]
              [--date DATE] [--period PERIOD] [--repeat REPEAT]
@@ -331,5 +328,5 @@ Distribution options - PRIVATE API ONLY!:
 Options -v/--verbose active verbose mode in search, and if you look for domain information,
 this will be activate all domain verbose mode options
 </code></pre>
-
+ 
  Tested on Mac Os X 10.8.5/10.9 and Ubuntu 12.04.4
