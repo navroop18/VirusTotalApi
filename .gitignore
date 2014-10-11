@@ -34,9 +34,3 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-
-vtfiles.py
-
-requirements.txt~
-
-vt.py
