@@ -25,6 +25,18 @@ Example of installing all dependencies using pip:
 pip install -r requirements.txt
 ```
 
+**11.10.2014:**
+
+* Big upgrade, with bug fixes, code cleaning, a lot of improvement
+* Now you can have file with list of hashes to download, or pass them as param
+* Domain walk - will get all ips and check information about them
+* Private api impruvement and full support, before was hardcoded 4 items to check, now if you have private api will check up to 25 items in only one petition
+* You can pass more then 4 url/hashes to check with your public api, it will do it with waiting before every 4 petition, the same for private api but between 25 petitions
+* Can retreiv information about many domain/ips, now you don't need bash loop or check one by one :)
+* etc
+
+PS I will try to document all tricks of using of this script, when I will have a bit of time
+
 **04.08.2014:**
 
 * Ip search (-i) now can be used scheme search like this http://ip, urlparse will extract domain
