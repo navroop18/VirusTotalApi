@@ -38,3 +38,5 @@ nosetests.xml
 vtfiles.py
 
 requirements.txt~
+
+vt.py
