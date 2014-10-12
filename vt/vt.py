@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 __license__ = 'GPLv3'
 
 import os
@@ -890,46 +890,49 @@ class vtAPI():
             if isinstance(jdata, list):
 
                 for jdata_part in jdata:
+                    if jdata_part is None:
+                        print '[-] Nothing found'
 
-                    if jdata_part and 'response_code' in jdata_part and jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
+                    elif jdata_part is None and 'response_code' in jdata_part and jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
                         if jdata_part.get('verbose_msg'):
                             print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata_part['verbose_msg'])
-                        break
+                    else:
+                        if dump:
+                            md5 = hashlib.md5(jdata_part['url']).hexdigest()
 
+                        if key == 'report':
+                            url_report = True
+                            parse_report(
+                                jdata_part, md5, verbose, dump, csv_write ,url_report)
+
+                        elif key == 'scan':
+                            if jdata_part.get('verbose_msg'):
+                                print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg=jdata_part['verbose_msg'], url=jdata_part['url'])
+                            if jdata_part.get('permalink'):
+                                print '\tPermanent link : {permalink}'.format(permalink=jdata_part['permalink'])
+
+            else:
+                if jdata is None:
+                    print '[-] Nothing found'
+
+                elif  'response_code' in jdata and jdata['response_code'] == 0 or jdata['response_code'] == -1:
+                    if jdata.get('verbose_msg'):
+                        print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
+
+                else:
                     if dump:
-                        md5 = hashlib.md5(jdata_part['url']).hexdigest()
+                        md5 = hashlib.md5(jdata['url']).hexdigest()
 
                     if key == 'report':
                         url_report = True
                         parse_report(
-                            jdata_part, md5, verbose, dump, csv_write ,url_report)
+                            jdata, md5, verbose, dump, csv_write, url_report)
 
                     elif key == 'scan':
-                        if jdata_part.get('verbose_msg'):
-                            print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg=jdata_part['verbose_msg'], url=jdata_part['url'])
-                        if jdata_part.get('permalink'):
-                            print '\tPermanent link : {permalink}'.format(permalink=jdata_part['permalink'])
-
-            else:
-
-                if  jdata and 'response_code' in jdata and jdata['response_code'] == 0 or jdata['response_code'] == -1:
-                    if jdata.get('verbose_msg'):
-                        print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
-                    return
-
-                if dump:
-                    md5 = hashlib.md5(jdata['url']).hexdigest()
-
-                if key == 'report':
-                    url_report = True
-                    parse_report(
-                        jdata, md5, verbose, dump, csv_write, url_report)
-
-                elif key == 'scan':
-                    if jdata.get('verbose_msg'):
-                        print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg=jdata['verbose_msg'], url=jdata['url'])
-                    if jdata.get('permalink'):
-                        print '\tPermanent link : {permalink}'.format(permalink=jdata['permalink'])
+                        if jdata.get('verbose_msg'):
+                            print '\n\tStatus : {verb_msg}\t{url}'.format(verb_msg=jdata['verbose_msg'], url=jdata['url'])
+                        if jdata.get('permalink'):
+                            print '\tPermanent link : {permalink}'.format(permalink=jdata['permalink'])
 
             if cont % 4 == 0:
                 print '[+] Sleep 60 seconds between the requests'
