@@ -488,7 +488,8 @@ class vtAPI():
                 jdata, response = get_response(url, params=self.params)
                 jdatas += jdata
 
-        if isinstance(jdatas, list) and not filter(None, jdatas):
+        jdatas = filter(None, jdatas)
+        if isinstance(jdatas, list):
             print 'Nothing found'
             return
 
@@ -712,7 +713,7 @@ class vtAPI():
                     if jdata.get('permalink'):
                         print '\tPermanent link : {permalink}\n'.format(permalink=jdata['permalink'])
 
-    def fileScan(self, files, verbose=False, notify_url=False, notify_changes_only=False, dump=False, csv_write=False, scan=False, privateAPI=False):
+    def fileScan(self, files, verbose=False, notify_url=False, notify_changes_only=False, dump=False, csv_write=False, privateAPI=False, scan=False):
         """
         Allows to send a file to be analysed by VirusTotal.
         Before performing your submissions we encourage you to retrieve the latest report on the files,
@@ -744,7 +745,7 @@ class vtAPI():
 
         for index, c_file in enumerate(files):
             if os.path.isfile(c_file):
-                files[index] = md5(c_file).hexdigest()
+                files[index] = hashlib.md5(c_file).hexdigest()
 
         for submit_file in files:
             if os.path.exists(submit_file):
@@ -1872,15 +1873,15 @@ def main():
 
     if options.files:
         vt.fileScan(options.value, options.verbose, options.notify_url,
-                    options.notify_changes_only, options.dump, options.csv, scan=True, api_type=api_type)
+                    options.notify_changes_only, options.dump, options.csv, api_type, scan=True)
 
     elif options.file_search:
         vt.fileScan(options.value, options.verbose, options.notify_url,
-                    options.notify_changes_only, options.dump, options.csv, api_type=api_type)
+                    options.notify_changes_only, options.dump, options.csv, api_type)
 
     elif options.url_scan and not options.url_report:
         vt.url_scan_and_report(
-            options.value, "scan", options.verbose, options.dump, options.csv, api_type=api_type)
+            options.value, "scan", options.verbose, options.dump, options.csv, api_type)
 
     elif options.url_report:
         action = 0
@@ -1889,7 +1890,7 @@ def main():
             action = 1
 
         vt.url_scan_and_report(
-            options.value, "report", options.verbose, options.dump, options.csv, action, api_type=api_type)
+            options.value, "report", options.verbose, options.dump, options.csv, action, api_type)
 
     elif options.rescan:
 
@@ -1917,11 +1918,11 @@ def main():
                  options.detected_communicated, options.undetected_communicated)
 
     elif options.report_all_info:
-        vt.getReport(options.value, '1', options.verbose, options.dump, privateAPI=api_type)
+        vt.getReport(options.value, '1', options.verbose, options.dump, api_type)
 
     elif options.search and not options.domain and not options.ip and not options.url_scan and not options.url_report:
         vt.getReport(
-            options.value, '0', options.verbose, options.dump, options.csv, privateAPI=api_type)
+            options.value, '0', options.verbose, options.dump, options.csv, api_type)
 
     elif options.download:
         vt.download(options.value[0], 'file')
