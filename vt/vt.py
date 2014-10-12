@@ -669,7 +669,7 @@ class vtAPI():
                 hash_part = [
                     hashlib.md5(open(hash_part, 'rb').read()).hexdigest()]
 
-            self.params.setdefault('resource',hash_part)
+            self.params.setdefault('resource', hash_part)
 
             if delete:
                 url = url + '/delete'
@@ -709,7 +709,6 @@ class vtAPI():
                 else:
                     if jdata.get('sha256'):
                         print '[+] Check rescan result with sha256 in few minuts : \n\tSHA256 : {sha256}'.format(sha256=jdata['sha256'])
-                    print '\n Rescaning file\hash: {0}\n '.format(hash_part.replace(',', '').strip())
                     if jdata.get('permalink'):
                         print '\tPermanent link : {permalink}\n'.format(permalink=jdata['permalink'])
 
