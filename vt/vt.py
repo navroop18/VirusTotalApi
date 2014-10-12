@@ -488,8 +488,7 @@ class vtAPI():
                 jdata, response = get_response(url, params=self.params)
                 jdatas += jdata
 
-        jdatas = filter(None, jdatas)
-        if isinstance(jdatas, list):
+        if isinstance(jdatas, list) and filter(None, jdatas):
             print 'Nothing found'
             return
 
@@ -893,7 +892,7 @@ class vtAPI():
                     if jdata_part is None:
                         print '[-] Nothing found'
 
-                    elif jdata_part is None and 'response_code' in jdata_part and jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
+                    elif 'response_code' in jdata_part and jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
                         if jdata_part.get('verbose_msg'):
                             print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata_part['verbose_msg'])
                     else:
