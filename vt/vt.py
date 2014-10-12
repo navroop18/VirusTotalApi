@@ -728,12 +728,14 @@ class vtAPI():
         if len(files) == 1 and isinstance(files, list):
 
             if isinstance(files[0], basestring):
-                files = files
+                pass
             else:
-                files = glob.glob('{files}'.format(files=files[0]))
+                if os.path.isdir(files[0]):
+                    files = glob.glob('{files}'.format(files=files[0]))
 
         elif isinstance(files, basestring):
-            files = glob.glob('{files}'.format(files=files))
+            if os.path.isdir(files[0]):
+                files = glob.glob('{files}'.format(files=files))
 
         if notify_url:
             self.params.setdefault('notify_url', notify_url)
@@ -743,13 +745,13 @@ class vtAPI():
 
         url = self.base + 'file/scan'
 
-        for index, c_file in enumerate(files):
-            if os.path.isfile(c_file):
-                files[index] = hashlib.md5(c_file).hexdigest()
+        if not scan:
+            files_originals = files
+            for index, c_file in enumerate(files):
+                if os.path.isfile(c_file):
+                    files[index] = hashlib.md5(c_file).hexdigest()
 
         for submit_file in files:
-            if os.path.exists(submit_file):
-                readed = open(submit_file, 'rb').read()
 
             not_exit = True
             # se chekea llista completa de los hashes,no solo uno
