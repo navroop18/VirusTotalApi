@@ -669,29 +669,29 @@ class vtAPI():
                 hash_part = [
                     hashlib.md5(open(hash_part, 'rb').read()).hexdigest()]
 
-            params = {'resource': hash_part, 'apikey': self.api}
+            self.params.setdefault('resource',hash_part)
 
             if delete:
                 url = url + '/delete'
 
             else:
                 if date:
-                    params.setdefault('date', date)
+                    self.params.setdefault('date', date)
 
                 if period:
-                    params.setdefault('period', period)
+                    self.params.setdefault('period', period)
 
                     if repeat:
-                        params.setdefault('repeat', repeat)
+                        self.params.setdefault('repeat', repeat)
 
                 if notify_url:
-                    params.setdefault('notify_url', notify_url)
+                    self.params.setdefault('notify_url', notify_url)
 
                     if notify_changes_only:
-                        params.setdefault(
+                        self.params.setdefault(
                             'notify_changes_only', notify_changes_only)
 
-            jdatas, response = get_response(url, params=params, method='post')
+            jdatas, response = get_response(url, params=self.params, method='post')
 
             if isinstance(jdatas, list) and not filter(None, jdatas):
                 print 'Nothing found'
@@ -1371,7 +1371,6 @@ class vtAPI():
             dump = False
 
         else:
-            params = {'apikey': self.api}
 
             if before:
                 self.params.setdefault('before', before)
