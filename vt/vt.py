@@ -488,7 +488,8 @@ class vtAPI():
                 jdata, response = get_response(url, params=self.params)
                 jdatas += jdata
 
-        if isinstance(jdatas, list) and filter(None, jdatas):
+        jdatas = filter(None, jdatas)
+        if isinstance(jdatas, list) and jdatas == []:
             print 'Nothing found'
             return
 
