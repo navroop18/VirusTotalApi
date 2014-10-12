@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 __license__ = 'GPLv3'
 
 import os
@@ -749,7 +749,7 @@ class vtAPI():
             files_originals = files
             for index, c_file in enumerate(files):
                 if os.path.isfile(c_file):
-                    files[index] = hashlib.md5(c_file).hexdigest()
+                    files[index] = hashlib.md5(open(c_file, 'rb').read()).hexdigest()
 
         for submit_file in files:
 
