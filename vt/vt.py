@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 __license__ = 'GPLv3'
 
 import os
@@ -891,7 +891,7 @@ class vtAPI():
 
                 for jdata_part in jdata:
 
-                    if jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
+                    if jdata_part and 'response_code' in jdata_part and jdata_part['response_code'] == 0 or jdata_part['response_code'] == -1:
                         if jdata_part.get('verbose_msg'):
                             print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata_part['verbose_msg'])
                         break
@@ -912,10 +912,10 @@ class vtAPI():
 
             else:
 
-                if jdata['response_code'] == 0 or jdata['response_code'] == -1:
+                if  jdata and 'response_code' in jdata and jdata['response_code'] == 0 or jdata['response_code'] == -1:
                     if jdata.get('verbose_msg'):
                         print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
-                    sys.exit()
+                    return
 
                 if dump:
                     md5 = hashlib.md5(jdata['url']).hexdigest()
