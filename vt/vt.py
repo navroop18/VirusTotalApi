@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 __license__ = 'GPLv3'
 
 import os
@@ -478,7 +478,7 @@ class vtAPI():
 
             for hashes_report in hash_reports:
 
-                self.params.setdefault('resource',hashes_report)
+                self.params['resource'] = hashes_report
 
                 if allinfo:
                     self.params.setdefault('allinfo', allinfo)
@@ -745,10 +745,10 @@ class vtAPI():
         url = self.base + 'file/scan'
 
         if not scan:
-            files_originals = files
             for index, c_file in enumerate(files):
                 if os.path.isfile(c_file):
-                    files[index] = hashlib.md5(open(c_file, 'rb').read()).hexdigest()
+
+                   files[index] = hashlib.md5(open(c_file, 'rb').read()).hexdigest()
 
         for submit_file in files:
 
@@ -767,10 +767,10 @@ class vtAPI():
                         files = {"file": (file_name, open(submit_file, 'rb'))}
 
                         try:
-
+                            print self.params
                             jdata, response = get_response(
                                 url, files=files, params=self.params, method="post")
-
+                            print jdata
                             if jdata['response_code'] == 0 or jdata['response_code'] == -1:
                                 if jdata.get('verbose_msg'):
                                     print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
@@ -1858,10 +1858,10 @@ def main():
             sys.exit('\nFile {0} don\'t exists\n'.format(confpath))
 
     except Exception:
-        sys.exit('No API key provided and cannot read ~ / .vtapi. Specify an API key in vt.py or in ~ / .vtapi or in your file')
+        sys.exit('No API key provided and cannot read ~ / .vtapi. Specify an API key in vt.py or in ~ / .vtapi or in your file\n For mor information check https://github.com/doomedraven/VirusTotalApi')
 
     if apikey is None:
-        sys.exit('No API key provided or can\'t read ~/.vtapi|config. Specify an API key in in ~/.vtapi|your config file')
+        sys.exit('No API key provided or can\'t read ~/.vtapi|config. Specify an API key in in ~/.vtapi|your config file\n For mor information check https://github.com/doomedraven/VirusTotalApi')
 
     vt = vtAPI(apikey)
 
