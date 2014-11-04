@@ -767,10 +767,10 @@ class vtAPI():
                         files = {"file": (file_name, open(submit_file, 'rb'))}
 
                         try:
-                            print self.params
+                            
                             jdata, response = get_response(
                                 url, files=files, params=self.params, method="post")
-                            print jdata
+                            
                             if jdata['response_code'] == 0 or jdata['response_code'] == -1:
                                 if jdata.get('verbose_msg'):
                                     print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
