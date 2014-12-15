@@ -22,6 +22,7 @@ import hashlib
 import argparse
 import requests
 import ConfigParser
+from re import match
 import texttable as tt
 from urlparse import urlparse
 from operator import methodcaller
@@ -1911,14 +1912,28 @@ def main():
         vt.rescan(options.value, options.date, options.period, options.repeat,
                   options.notify_url, options.notify_changes_only, options.delete)
 
-    elif options.domain:
-        vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.undetected_downloaded_samples, options.alexa_domain_info,
-                     options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                     options.undetected_communicated, options.pcaps, options.walk)
+    elif options.domain or options.ip:
 
-    elif options.ip:
-        vt.getIP(options.value, options.dump, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples,
-                 options.detected_communicated, options.undetected_communicated)
+        if match('\w{1,3}\.\w{1,3}\.\w{1,3}\.\w{1,3}', options.value[0]):
+
+            #paranoic check :)
+            try:
+                valid=len(filter(lambda(item):0<=int(item)<255, options.value[0].strip().split("."))) == 4
+            except ValueError:
+                valid = False
+
+            if valid:
+                vt.getIP(options.value, options.dump, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples,
+                        options.detected_communicated, options.undetected_communicated)
+
+            else:
+                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.undetected_downloaded_samples, options.alexa_domain_info,
+                            options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
+                            options.undetected_communicated, options.pcaps, options.walk)
+        else:
+                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.undetected_downloaded_samples, options.alexa_domain_info,
+                            options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
+                            options.undetected_communicated, options.pcaps, options.walk)
 
     elif options.report_all_info:
         vt.getReport(options.value, '1', options.verbose, options.dump, api_type)

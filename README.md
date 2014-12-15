@@ -25,6 +25,10 @@ Example of installing all dependencies using pip:
 pip install -r requirements.txt
 ```
 
+**15.12.2014:**
+* Now doesn't matter if you put -d or -i for domain/ip, it will catch it correctly :)
+  * Example: -d 127.0.0.1 it will be passed to ip not to domain, and vice versa 
+
 **11.10.2014:**
 
 * Big upgrade, with bug fixes, code cleaning, a lot of improvement
