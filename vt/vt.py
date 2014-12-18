@@ -768,10 +768,10 @@ class vtAPI():
                         files = {"file": (file_name, open(submit_file, 'rb'))}
 
                         try:
-                            
+
                             jdata, response = get_response(
                                 url, files=files, params=self.params, method="post")
-                            
+
                             if jdata['response_code'] == 0 or jdata['response_code'] == -1:
                                 if jdata.get('verbose_msg'):
                                     print '\n[!] Status : {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'])
@@ -1918,7 +1918,7 @@ def main():
 
             #paranoic check :)
             try:
-                valid=len(filter(lambda(item):0<=int(item)<255, options.value[0].strip().split("."))) == 4
+                valid=len(filter(lambda(item):0<=int(item)<=255, options.value[0].strip().split("."))) == 4
             except ValueError:
                 valid = False
 
