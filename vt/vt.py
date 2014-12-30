@@ -1914,6 +1914,9 @@ def main():
 
     elif options.domain or options.ip:
 
+        if options.value[0].startswith('http'):
+            options.value[0] = urlparse(options.value[0]).netloc
+
         if match('\w{1,3}\.\w{1,3}\.\w{1,3}\.\w{1,3}', options.value[0]):
 
             #paranoic check :)
