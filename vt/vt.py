@@ -994,13 +994,11 @@ class vtAPI():
                 if jdata.get('verbose_msg'):
                     print '\n[+] Status {ip}: {verb_msg}'.format(verb_msg=jdata['verbose_msg'], ip=ip)
 
-                if jdata.get('detected_downloaded_samples') and detected_downloaded_samples:
-                    print '\n[+] Latest detected files that were downloaded from this domain/ip\n'
-                    pretty_print(sorted(jdata['detected_downloaded_samples'], key=methodcaller('get', 'date'), reverse=True), [
-                                 'positives', 'total', 'date', 'sha256'], [15, 10, 20, 70], ['c', 'c', 'c', 'c'])
-
                 print_results(jdata, undetected_downloaded_samples,
-                              detected_communicated, undetected_communicated, detected_urls)
+                              detected_communicated, undetected_communicated,
+                              detected_urls,
+                              detected_downloaded_samples
+                )
 
                 if jdata.get('resolutions'):
                     print '\n[+] Lastest domain resolved\n'
@@ -1119,7 +1117,7 @@ class vtAPI():
                               undetected_communicated,
                               detected_urls,
                               detected_downloaded_samples
-                              )
+                )
 
                 if jdata.get('pcaps') and pcaps:
 
