@@ -25,6 +25,12 @@ Example of installing all dependencies using pip:
 pip install -r requirements.txt
 ```
 
+**24.03.2015:**
+* -dds, --detected-downloaded-samples now works correctly
+* -wh, --whois added
+* requests InsecureRequestWarning: Unverified HTTPS request is being made - disabled
+
+
 **15.12.2014:**
 * Now doesn't matter if you put -d or -i for domain/ip, it will catch it correctly :)
   * Example: -d 127.0.0.1 it will be passed to ip not to domain, and vice versa 
