@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.4'
+__version__ = '2.0.5'
 __license__ = 'GPLv3'
 
 import os
@@ -28,6 +28,9 @@ from urlparse import urlparse
 from operator import methodcaller
 from dateutil.relativedelta import relativedelta
 
+ #InsecureRequestWarning: Unverified HTTPS request is being made.
+if hasattr(requests, 'packages'):
+    requests.packages.urllib3.disable_warnings()
 
 def private_api_access_error():
     print '\n[!] You don\'t have permission for this operation, Looks like you trying to access to PRIVATE API functions\n'
@@ -173,7 +176,13 @@ def load_file(file_path):
 
 
 def print_results(jdata, undetected_downloaded_samples, detected_communicated,
-  undetected_communicated_samples, detected_urls):
+  undetected_communicated_samples, detected_urls, detected_downloaded_samples):
+
+    if jdata.get('detected_downloaded_samples') and detected_downloaded_samples:
+
+        print '\n[+] Latest detected files that were downloaded from this domain/ip\n'
+        pretty_print(sorted(jdata['detected_downloaded_samples'], key=methodcaller('get', 'date'), reverse=True), [
+                     'positives', 'total', 'date', 'sha256'], [15, 10, 20, 70], ['c', 'c', 'c', 'c'])
 
     if jdata.get('undetected_downloaded_samples') and undetected_downloaded_samples:
 
@@ -962,7 +971,7 @@ class vtAPI():
                 pass
 
             elif isinstance(ips, basestring):
-                url_uploads = [ips]
+                ips = [ips]
 
             ips = map(lambda ip: urlparse(ip).netloc if ip.startswith(('http://', 'https://')) else ip, ips)
 
@@ -1004,9 +1013,9 @@ class vtAPI():
 
         return
 
-    def getDomain(self, domains, dump=False, trendmicro=False, detected_urls=False, undetected_downloaded_samples=False, alexa_domain_info=False,
+    def getDomain(self, domains, dump=False, trendmicro=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False, alexa_domain_info=False,
         wot_domain_info=False, websense_threatseeker=False, bitdefender=False, webutation_domain=False,
-        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False):
+        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False, whois=False):
         """
         Get domain last scan, detected urls and resolved IPs
         """
@@ -1101,10 +1110,15 @@ class vtAPI():
 
                     del plist
 
+                if jdata.get('whois') and whois:
+                    print '\n[+] Whois data:'
+                    print '\t'+jdata['whois'].replace('\n', '\n\t')
+
                 print_results(jdata, undetected_downloaded_samples,
                               detected_communicated,
                               undetected_communicated,
-                              detected_urls
+                              detected_urls,
+                              detected_downloaded_samples
                               )
 
                 if jdata.get('pcaps') and pcaps:
@@ -1786,6 +1800,8 @@ def main():
                             help='Domain/Ip Show latest detected files that communicate with this domain/ip')
     domain_opt.add_argument('-uc',  '--undetected-communicated', action='store_true', default=False,
                             help='Domain/Ip Show latest undetected files that communicate with this domain/ip')
+    domain_opt.add_argument('-wh',  '--whois', action='store_true', default=False,
+                            help='Whois data')
 
     behaviour = opt.add_argument_group('Behaviour options - PRIVATE API only!')
     behaviour.add_argument('--behaviour', action='store_true',  help='The md5/sha1/sha256 hash of the file whose dynamic behavioural report you want to retrieve.\
@@ -1873,7 +1889,7 @@ def main():
         options.detected_urls = options.undetected_downloaded_samples = options.wot_domain_info  = options.websense_threatseeker   = \
         options.detected_communicated = options.trendmicro = options.undetected_communicated = \
         options.alexa_domain_info = options.bitdefender = options.webutation_domain = options.pcaps = \
-        options.detected_downloaded_samples = options.behavior_network = options.behavior_process = options.behavior_summary = True
+        options.detected_downloaded_samples = options.behavior_network = options.behavior_process = options.behavior_summary = options.whois = True
 
     if options.files:
         vt.fileScan(options.value, options.verbose, options.notify_url,
@@ -1930,13 +1946,13 @@ def main():
                         options.detected_communicated, options.undetected_communicated)
 
             else:
-                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.undetected_downloaded_samples, options.alexa_domain_info,
+                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples ,options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois)
         else:
-                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.undetected_downloaded_samples, options.alexa_domain_info,
+                vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois)
 
     elif options.report_all_info:
         vt.getReport(options.value, '1', options.verbose, options.dump, api_type)
