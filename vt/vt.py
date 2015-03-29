@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.5'
+__version__ = '2.0.6'
 __license__ = 'GPLv3'
 
 import os
@@ -173,7 +173,6 @@ def load_file(file_path):
 
         except TypeError:
             print '\n[!] Check your json dump file\n'
-
 
 def print_results(jdata, undetected_downloaded_samples, detected_communicated,
   undetected_communicated_samples, detected_urls, detected_downloaded_samples):
@@ -994,8 +993,10 @@ class vtAPI():
                 if jdata.get('verbose_msg'):
                     print '\n[+] Status {ip}: {verb_msg}'.format(verb_msg=jdata['verbose_msg'], ip=ip)
 
-                print_results(jdata, undetected_downloaded_samples,
-                              detected_communicated, undetected_communicated,
+                print_results(jdata,
+                              undetected_downloaded_samples,
+                              detected_communicated,
+                              undetected_communicated,
                               detected_urls,
                               detected_downloaded_samples
                 )
@@ -1112,7 +1113,8 @@ class vtAPI():
                     print '\n[+] Whois data:'
                     print '\t'+jdata['whois'].replace('\n', '\n\t')
 
-                print_results(jdata, undetected_downloaded_samples,
+                print_results(jdata,
+                              undetected_downloaded_samples,
                               detected_communicated,
                               undetected_communicated,
                               detected_urls,
@@ -1145,7 +1147,8 @@ class vtAPI():
                                     detected_urls,
                                     undetected_downloaded_samples,
                                     detected_communicated,
-                                    undetected_communicated
+                                    undetected_communicated,
+                                    detected_downloaded_samples
                                 )
 
                 if dump is True:

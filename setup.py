@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='vt',
-    version='1.0.4',
+    version='1.0.5',
     description='VirusTotal Full API',
     packages=find_packages(),
     url='https://github.com/doomedraven/VirusTotalApi',
