@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.6'
+__version__ = '2.0.7'
 __license__ = 'GPLv3'
 
 import os
@@ -947,7 +947,7 @@ class vtAPI():
                 time.sleep(60)
 
     def getIP(self, ips, dump=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False,
-        detected_communicated=False, undetected_communicated=False):
+        detected_communicated=False, undetected_communicated=False, debug=False):
         """
         A valid IPv4 address in dotted quad notation, for the time being only IPv4 addresses are supported.
         """
@@ -1014,7 +1014,7 @@ class vtAPI():
 
     def getDomain(self, domains, dump=False, trendmicro=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False, alexa_domain_info=False,
         wot_domain_info=False, websense_threatseeker=False, bitdefender=False, webutation_domain=False,
-        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False, whois=False):
+        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False, whois=False, debug=False):
         """
         Get domain last scan, detected urls and resolved IPs
         """
@@ -1296,7 +1296,7 @@ class vtAPI():
                         if comment.get('comment'):
                             print 'Comment : {0}\n'.format(comment['comment'])
 
-    def download(self, hashes, file_type=False):
+    def download(self, hashes, intelligence, file_type=False):
         """
           About pcaps
           VirusTotal runs a distributed setup of Cuckoo sandbox machines that execute the files we receive.
@@ -1339,38 +1339,44 @@ class vtAPI():
 
                 self.params.setdefault('hash', f_hash)
 
-                print '\nTrying to download: {0}'.format(f_hash)
+                #print '\nTrying to download: {0}'.format(f_hash)
 
-                if file_type not in ('file', 'pcap'):
-                    print '\n[!] File_type must be pcap or file\n'
-                    return
+                if not intelligence:
 
-                if file_type == 'pcap':
-                    _, response = get_response(
-                        self.base + 'file/network-traffic', params=self.params)
-                    name = 'VTDL_{hash}.pcap'.format(hash=f_hash)
+                    if file_type not in ('file', 'pcap'):
+                        print '\n[!] File_type must be pcap or file\n'
+                        return
 
-                elif file_type == 'file':
-                    _, response = get_response(
-                        self.base + 'file/download', params=self.params)
+                    if file_type == 'pcap':
+                        _, response = get_response(
+                            self.base + 'file/network-traffic', params=self.params)
+                        name = 'VTDL_{hash}.pcap'.format(hash=f_hash)
+
+                    elif file_type == 'file':
+                        _, response = get_response(
+                            self.base + 'file/download', params=self.params)
+                        name = 'VTDL_{hash}.dangerous'.format(hash=f_hash)
+
+                    if response.status_code == 404:
+                        print '\n[!] File not found\n'
+                        return
+
+                else:
                     name = 'VTDL_{hash}.dangerous'.format(hash=f_hash)
-
-                if response.status_code == 404:
-                    print '\n[!] File not found\n'
-                    return
+                    _, response = get_response(
+                            'https://www.virustotal.com/intelligence/download/', params=self.params)
 
                 if len(response.content) > 0 and '{"response_code": 0, "hash":' not in response.content:
                     fo = open(name, "wb")
                     fo.write(response.content)
                     fo.close()
-                    print '\n\tDownloaded to File -- {name}\n'.format(name=name)
+                    print '\tDownloaded to File -- {name}'.format(name=name)
                 else:
                     try:
-                        json_data= response.json()
+                        json_data = response.json()
                         print '\n\t{0}: {1}'.format(json_data['verbose_msg'], f_hash)
                     except:
-                        print sys.exc_info()
-                        print 'FIle can\'t be downloaded: {0}'.format(f_hash)
+                        print '\tFile can\'t be downloaded: {0}'.format(f_hash)
 
     def distribution(self, local_file, action, before=False, after=False, reports=False, limit=False, allinfo=False, dump=False):
         """
@@ -1755,6 +1761,8 @@ def main():
                      help='Dumps the full VT report to file (VTDL{md5}.json), if you (re)scan many files/urls, their json data will be dumped to separetad files')
     opt.add_argument('--csv', action='store_true', default = False,
                      help='Dumps the AV\'s detections to file (VTDL{scan_id}.csv)')
+    opt.add_argument('--debug', action='store_true', default = False,
+                     help='only for development/new features ^_^')
 
     rescan = opt.add_argument_group('Rescan options')
     rescan.add_argument('-r', '--rescan', action='store_true',
@@ -1852,6 +1860,7 @@ def main():
 
     apikey = None
     api_type = False  # = Public
+    intelligence = 'yes'
 
     try:
         confpath = os.path.expanduser(options.config_file)
@@ -1872,6 +1881,10 @@ def main():
 
                     elif  api_type == 'private':
                         api_type = True
+
+                if config.has_option('vt', 'intelligence'):
+                    intelligence = config.get('vt', 'intelligence')
+
         else:
             sys.exit('\nFile {0} don\'t exists\n'.format(confpath))
 
@@ -1944,16 +1957,16 @@ def main():
 
             if valid:
                 vt.getIP(options.value, options.dump, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples,
-                        options.detected_communicated, options.undetected_communicated)
+                        options.detected_communicated, options.undetected_communicated, options.debug)
 
             else:
                 vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples ,options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk, options.whois)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.debug)
         else:
                 vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk, options.whois)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.debug)
 
     elif options.report_all_info:
         vt.getReport(options.value, '1', options.verbose, options.dump, api_type)
@@ -1963,10 +1976,10 @@ def main():
             options.value, '0', options.verbose, options.dump, options.csv, api_type)
 
     elif options.download:
-        vt.download(options.value[0], 'file')
+        vt.download(options.value[0], intelligence, 'file')
 
     elif options.pcap:
-        vt.download(options.value[0], 'pcap')
+        vt.download(options.value[0], intelligence, 'pcap')
 
     elif options.behaviour:
         vt.behaviour(options.value[
