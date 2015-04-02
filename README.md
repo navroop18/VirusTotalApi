@@ -11,8 +11,10 @@ Before using the tool you must set your api key near the end of the file or in ~
 [vt]
 apikey=your-apikey-here
 type=private
+intelligence=False
 ```
 * your type of api access, if private: type=private, if public, you can leave it empty, it will be automatically reconized as public
+* if you have access to VT Intelligence, you need set to True
 
 **Dependencies:**
  *  requests
@@ -24,6 +26,9 @@ Example of installing all dependencies using pip:
 ```python
 pip install -r requirements.txt
 ```
+
+**02.04.2015:**
+* Download from VT intelligence 
 
 **24.03.2015:**
 * -dds, --detected-downloaded-samples now works correctly
