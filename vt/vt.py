@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.7'
+__version__ = '2.0.7.1'
 __license__ = 'GPLv3'
 
 import os
@@ -29,8 +29,11 @@ from operator import methodcaller
 from dateutil.relativedelta import relativedelta
 
  #InsecureRequestWarning: Unverified HTTPS request is being made.
-if hasattr(requests, 'packages'):
-    requests.packages.urllib3.disable_warnings()
+try:
+     from requests.packages.urllib3.exceptions import InsecureRequestWarning
+     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+except AttributeError:
+     pass
 
 def private_api_access_error():
     print '\n[!] You don\'t have permission for this operation, Looks like you trying to access to PRIVATE API functions\n'
@@ -1829,10 +1832,10 @@ def main():
         '-bs', '--behavior-summary', action='store_true', help='Show summary')
 
     more_private = opt.add_argument_group('Additional PRIVATE API options')
-    more_private.add_argument('--pcap', action='store_true',
-                              help='The md5/sha1/sha256 hash of the file whose network traffic dump you want to retrieve. Will save as VTDL_{hash}.pcap')
-    more_private.add_argument('--download', action='store_true',
-                                  help='The md5/sha1/sha256 hash of the file you want to download or txt file with hashes, or hash and type, one by line, for example: hash,pcap or only hash. Will save as VTDL_{hash}.dangerous')
+    more_private.add_argument('--pcap', dest='download', action='store_const', const='pcap', default=False,
+                              help='The md5/sha1/sha256 hash of the file whose network traffic dump you want to retrieve. Will save as VTDL_hash.pcap')
+    more_private.add_argument('--download',  dest='download', action='store_const', const='file', default=False,
+                                  help='The md5/sha1/sha256 hash of the file you want to download or txt file with hashes, or hash and type, one by line, for example: hash,pcap or only hash. Will save as VTDL_hash.dangerous')
     more_private.add_argument('--clusters', action='store_true',
                                   help='A specific day for which we want to access the clustering details, example: 2013-09-10')
     # more_private.add_argument('--search-by-cluster-id', action='store_true', help=' the id property of each cluster allows users to list files contained in the given cluster, example: vhash 0740361d051)z1e3z 2013-09-10')
@@ -1860,7 +1863,7 @@ def main():
 
     apikey = None
     api_type = False  # = Public
-    intelligence = 'yes'
+    intelligence = False
 
     try:
         confpath = os.path.expanduser(options.config_file)
@@ -1976,10 +1979,10 @@ def main():
             options.value, '0', options.verbose, options.dump, options.csv, api_type)
 
     elif options.download:
-        vt.download(options.value[0], intelligence, 'file')
+        vt.download(options.value[0], intelligence, options.download)
 
-    elif options.pcap:
-        vt.download(options.value[0], intelligence, 'pcap')
+    #elif options.pcap:
+    #    vt.download(options.value[0], intelligence, 'pcap')
 
     elif options.behaviour:
         vt.behaviour(options.value[
