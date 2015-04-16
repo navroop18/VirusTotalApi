@@ -26,6 +26,21 @@ Example of installing all dependencies using pip:
 ```python
 pip install -r requirements.txt
 ```
+**17.04.2015 - added new domain and ip options, other new stuff soon**
+* detected-referrer-samples
+* undetected-referrer-samples
+* whois
+* whois-timestamp
+* passive-dns
+* asn
+* country
+* subdomains
+* domain-siblings
+* categories
+* alexa-cat
+* alexa-rank
+* opera-info
+* drweb-cat
 
 **02.04.2015:**
 * Download from VT intelligence 
