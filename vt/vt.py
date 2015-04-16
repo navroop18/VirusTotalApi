@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.7.1'
+__version__ = '2.0.8'
 __license__ = 'GPLv3'
 
 import os
@@ -18,6 +18,7 @@ import csv
 import time
 import json
 import glob
+
 import hashlib
 import argparse
 import requests
@@ -26,6 +27,7 @@ from re import match
 import texttable as tt
 from urlparse import urlparse
 from operator import methodcaller
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
  #InsecureRequestWarning: Unverified HTTPS request is being made.
@@ -178,7 +180,7 @@ def load_file(file_path):
             print '\n[!] Check your json dump file\n'
 
 def print_results(jdata, undetected_downloaded_samples, detected_communicated,
-  undetected_communicated_samples, detected_urls, detected_downloaded_samples):
+  undetected_communicated_samples, detected_urls, detected_downloaded_samples, detected_referrer_samples, undetected_referrer_samples):
 
     if jdata.get('detected_downloaded_samples') and detected_downloaded_samples:
 
@@ -203,6 +205,20 @@ def print_results(jdata, undetected_downloaded_samples, detected_communicated,
         print '\n[+] Latest undetected files that communicate with this domain/ip\n'
         pretty_print(sorted(jdata['undetected_communicating_samples'], key=methodcaller('get', 'date'), reverse=True), [
                      'positives', 'total', 'date', 'sha256'], [15, 10, 20, 70], ['c', 'c', 'c', 'c'])
+
+    if jdata.get('detected_communicating_samples') and detected_referrer_samples:
+
+        print '\n[+] Latest detected referrer files\n'
+        pretty_print(sorted(jdata['detected_referrer_samples']), [
+                     'positives', 'total',  'sha256'], [15, 10, 70], ['c', 'c', 'c'])
+
+
+    if jdata.get('undetected_communicating_samples') and undetected_referrer_samples:
+
+        print '\n[+] Latest undetected referrer files\n'
+        pretty_print(sorted(jdata['undetected_referrer_samples']), [
+                     'positives', 'total',  'sha256'], [15, 10, 70], ['c', 'c', 'c'])
+
 
     if jdata.get('detected_urls') and detected_urls:
 
@@ -765,7 +781,7 @@ class vtAPI():
         for submit_file in files:
 
             not_exit = True
-            # se chekea llista completa de los hashes,no solo uno
+            # Check all list of files, not only one
             result = self.getReport(
                     submit_file, False, verbose, dump, csv_write, not_exit, submit_file, privateAPI=privateAPI)
 
@@ -950,7 +966,7 @@ class vtAPI():
                 time.sleep(60)
 
     def getIP(self, ips, dump=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False,
-        detected_communicated=False, undetected_communicated=False, debug=False):
+        detected_communicated=False, undetected_communicated=False, asn=False, detected_referrer_samples=False, undetected_referrer_samples=False, country=False, passive_dns=False):
         """
         A valid IPv4 address in dotted quad notation, for the time being only IPv4 addresses are supported.
         """
@@ -993,18 +1009,27 @@ class vtAPI():
                     print '\n[-] Status {ip}: {verb_msg}\n'.format(verb_msg=jdata['verbose_msg'], ip=ip)
 
             elif jdata['response_code'] == 1:
+
                 if jdata.get('verbose_msg'):
                     print '\n[+] Status {ip}: {verb_msg}'.format(verb_msg=jdata['verbose_msg'], ip=ip)
+
+                if asn and jdata.get('asn'):
+                    print '\n[+] ASN: {0}'.format(jdata['asn'])
+
+                if country and jdata.get('country'):
+                    print '\n[+] Country: {0}'.format(jdata['country'])
 
                 print_results(jdata,
                               undetected_downloaded_samples,
                               detected_communicated,
                               undetected_communicated,
                               detected_urls,
-                              detected_downloaded_samples
+                              detected_downloaded_samples,
+                              detected_referrer_samples,
+                              undetected_referrer_samples
                 )
 
-                if jdata.get('resolutions'):
+                if passive_dns and jdata.get('resolutions'):
                     print '\n[+] Lastest domain resolved\n'
                     pretty_print(sorted(jdata['resolutions'], key=methodcaller(
                         'get', 'last_resolved'), reverse=True), ['last_resolved', 'hostname'])
@@ -1017,7 +1042,9 @@ class vtAPI():
 
     def getDomain(self, domains, dump=False, trendmicro=False, detected_urls=False, detected_downloaded_samples=False, undetected_downloaded_samples=False, alexa_domain_info=False,
         wot_domain_info=False, websense_threatseeker=False, bitdefender=False, webutation_domain=False,
-        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False, whois=False, debug=False):
+        detected_communicated=False, undetected_communicated=False, pcaps=False, walk=False, whois=False,
+        whois_timestamp=False, detected_referrer_samples=False, undetected_referrer_samples=False, passive_dns=False,
+        subdomains=False, domain_siblings=False, categories=False, drweb_cat=False ,alexa_cat=False, alexa_rank=False, opera_info=False):
         """
         Get domain last scan, detected urls and resolved IPs
         """
@@ -1063,6 +1090,11 @@ class vtAPI():
                 if jdata.get('verbose_msg'):
                     print '\nStatus : {verb_msg}'.format(verb_msg=jdata['verbose_msg'])
 
+                if jdata.get('categories') and categories:
+
+                    print '\n[+] Categories'
+                    print '\t{0}'.format('\n\t'.join(jdata['categories']))
+
                 if jdata.get('TrendMicro category') and trendmicro:
 
                     print '\n[+] TrendMicro category'
@@ -1077,11 +1109,33 @@ class vtAPI():
 
                     print '\n[+] BitDefender category'
                     print '\t', jdata['BitDefender category']
+                #ToDo add options to not show
+                if jdata.get('Dr.Web category') and drweb_cat:
+
+                    print '\n[+] Dr.Web category'
+                    print '\t', jdata['Dr.Web category']
 
                 if jdata.get('Alexa domain info') and alexa_domain_info:
 
                     print '\n[+] Alexa domain info'
                     print '\t', jdata['Alexa domain info']
+
+                if jdata.get('Alexa category')  and alexa_cat:
+
+                    print '\n[+] Alexa category'
+                    print '\t', jdata['Alexa category']
+
+                #ToDo add options to not show
+                if jdata.get('Alexa rank') and alexa_rank:
+
+                    print '\n[+] Alexa rank:'
+                    print '\t', jdata['Alexa rank']
+
+                #ToDo add options to not show
+                if jdata.get('Opera domain info') and opera_info:
+
+                    print '\n[+] Opera domain info'
+                    print '\t', jdata['Opera domain info']
 
                 if jdata.get('WOT domain info') and wot_domain_info:
 
@@ -1114,14 +1168,20 @@ class vtAPI():
 
                 if jdata.get('whois') and whois:
                     print '\n[+] Whois data:'
-                    print '\t'+jdata['whois'].replace('\n', '\n\t')
+                    print '\t{0}'.format(jdata['whois'].replace('\n', '\n\t'))
+
+                if  jdata.get('whois_timestamp') and whois_timestamp:
+                    print '\n[+] Whois timestamp:'
+                    print '\t{0}'.format(datetime.fromtimestamp(float(jdata['whois_timestamp'])).strftime('%Y-%m-%d %H:%M:%S'))
 
                 print_results(jdata,
                               undetected_downloaded_samples,
                               detected_communicated,
                               undetected_communicated,
                               detected_urls,
-                              detected_downloaded_samples
+                              detected_downloaded_samples,
+                              detected_referrer_samples,
+                              undetected_referrer_samples
                 )
 
                 if jdata.get('pcaps') and pcaps:
@@ -1129,7 +1189,7 @@ class vtAPI():
                     print '\n'
                     pretty_print(jdata['pcaps'], ['pcaps'], [70], ['c'])
 
-                if jdata.get('resolutions'):
+                if passive_dns and jdata.get('resolutions'):
 
                     print '\n[+] Passive DNS replication\n'
                     pretty_print(sorted(jdata['resolutions'], key=methodcaller(
@@ -1151,8 +1211,19 @@ class vtAPI():
                                     undetected_downloaded_samples,
                                     detected_communicated,
                                     undetected_communicated,
-                                    detected_downloaded_samples
+                                    detected_referrer_samples,
+                                    detected_downloaded_samples,
+                                    detected_downloaded_samples,
+                                    undetected_referrer_samples
                                 )
+
+                if subdomains and jdata.get('subdomains'):
+                    print '\n[+] Subdomains:'
+                    print '\t{0}'.format('\n\t'.join(jdata['subdomains']))
+
+                if domain_siblings and jdata.get('domain_siblings'):
+                    print '\n[+] Domain siblings:'
+                    print '\t{0}'.format('\n\t'.join(jdata['domain_siblings']))
 
                 if dump is True:
                     md5 = hashlib.md5(name).hexdigest()
@@ -1764,8 +1835,6 @@ def main():
                      help='Dumps the full VT report to file (VTDL{md5}.json), if you (re)scan many files/urls, their json data will be dumped to separetad files')
     opt.add_argument('--csv', action='store_true', default = False,
                      help='Dumps the AV\'s detections to file (VTDL{scan_id}.csv)')
-    opt.add_argument('--debug', action='store_true', default = False,
-                     help='only for development/new features ^_^')
 
     rescan = opt.add_argument_group('Rescan options')
     rescan.add_argument('-r', '--rescan', action='store_true',
@@ -1788,6 +1857,30 @@ def main():
 
     domain_opt = opt.add_argument_group(
         'Domain/IP shared verbose mode options, by default just show resolved IPs/Passive DNS')
+    domain_opt.add_argument('-wh',  '--whois', action='store_true', default=False,
+                            help='Whois data')
+    domain_opt.add_argument('-wht',  '--whois-timestamp', action='store_true', default=False,
+                            help='Whois timestamp')
+    domain_opt.add_argument('-pdn',  '--passive-dns', action='store_true', default=False,
+                            help='Passive DNS resolves')
+    domain_opt.add_argument('--asn', action='store_true', default=False,
+                            help='ASN number')
+    domain_opt.add_argument('--country', action='store_true', default=False,
+                            help='Country')
+    domain_opt.add_argument('--subdomains', action='store_true', default=False,
+                            help='Subdomains')
+    domain_opt.add_argument('--domain-siblings', action='store_true', default=False,
+                            help='Domain siblings')
+    domain_opt.add_argument('-cat','--categories', action='store_true', default=False,
+                            help='Categories')
+    domain_opt.add_argument('-alc', '--alexa-cat', action='store_true', default=False,
+                            help='Alexa category')
+    domain_opt.add_argument('-alk', '--alexa-rank', action='store_true', default=False,
+                            help='Alexa rank')
+    domain_opt.add_argument('-opi', '--opera-info', action='store_true', default=False,
+                            help='Opera info')
+    domain_opt.add_argument('--drweb-cat', action='store_true', default=False,
+                            help='Dr.Web Category')
     domain_opt.add_argument('-adi', '--alexa-domain-info', action='store_true',
                             default=False, help='Just Domain option: Show Alexa domain info')
     domain_opt.add_argument('-wdi', '--wot-domain-info', action='store_true',
@@ -1812,8 +1905,11 @@ def main():
                             help='Domain/Ip Show latest detected files that communicate with this domain/ip')
     domain_opt.add_argument('-uc',  '--undetected-communicated', action='store_true', default=False,
                             help='Domain/Ip Show latest undetected files that communicate with this domain/ip')
-    domain_opt.add_argument('-wh',  '--whois', action='store_true', default=False,
-                            help='Whois data')
+    domain_opt.add_argument('-drs', '--detected-referrer-samples', action='store_true', default=False,
+                            help='Undetected referrer sampels')
+    domain_opt.add_argument('-urs', '--undetected-referrer-samples', action='store_true', default=False,
+                            help='Undetected referrer sampels')
+
 
     behaviour = opt.add_argument_group('Behaviour options - PRIVATE API only!')
     behaviour.add_argument('--behaviour', action='store_true',  help='The md5/sha1/sha256 hash of the file whose dynamic behavioural report you want to retrieve.\
@@ -1906,7 +2002,10 @@ def main():
         options.detected_urls = options.undetected_downloaded_samples = options.wot_domain_info  = options.websense_threatseeker   = \
         options.detected_communicated = options.trendmicro = options.undetected_communicated = \
         options.alexa_domain_info = options.bitdefender = options.webutation_domain = options.pcaps = \
-        options.detected_downloaded_samples = options.behavior_network = options.behavior_process = options.behavior_summary = options.whois = True
+        options.detected_downloaded_samples = options.behavior_network = options.behavior_process = options.behavior_summary = options.whois =\
+        options.asn = options.detected_referrer_samples = options.undetected_referrer_samples = options.country = options.passive_dns =\
+        options.whois_timestamp = options.subdomains =  options.domain_siblings =\
+        options.categories = options.drweb_cat = options.alexa_cat = options.alexa_rank = options.opera_info = True
 
     if options.files:
         vt.fileScan(options.value, options.verbose, options.notify_url,
@@ -1960,16 +2059,18 @@ def main():
 
             if valid:
                 vt.getIP(options.value, options.dump, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples,
-                        options.detected_communicated, options.undetected_communicated, options.debug)
+                        options.detected_communicated, options.undetected_communicated, options.asn, options.detected_referrer_samples, options.undetected_referrer_samples, options.country, options.passive_dns)
 
             else:
                 vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples ,options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.debug)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.whois_timestamp, options.detected_referrer_samples, options.undetected_referrer_samples, options.passive_dns,
+                            options.subdomains, options.domain_siblings, options.categories, options.drweb_cat, options.alexa_cat, options.alexa_rank, options.opera_info)
         else:
                 vt.getDomain(options.value[0], options.dump, options.trendmicro, options.detected_urls, options.detected_downloaded_samples, options.undetected_downloaded_samples, options.alexa_domain_info,
                             options.wot_domain_info, options.websense_threatseeker, options.bitdefender, options.webutation_domain, options.detected_communicated,
-                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.debug)
+                            options.undetected_communicated, options.pcaps, options.walk, options.whois, options.whois_timestamp, options.detected_referrer_samples, options.undetected_referrer_samples, options.passive_dns,
+                            options.subdomains, options.domain_siblings, options.categories, options.drweb_cat, options.alexa_cat, options.alexa_rank, options.opera_info)
 
     elif options.report_all_info:
         vt.getReport(options.value, '1', options.verbose, options.dump, api_type)
