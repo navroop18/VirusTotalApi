@@ -2047,7 +2047,7 @@ def main():
         if options.date:
 
             if len(options.date) < 14:
-                print '\n[!] Date formar is: 20120725170000 or 2012-07-25 17 00 00 or 2012-07-25 17:00:00\n'
+                print '\n[!] Date format is: 20120725170000 or 2012-07-25 17 00 00 or 2012-07-25 17:00:00\n'
                 return
 
             now = time.strftime("%Y:%m:%d %H:%M:%S")
