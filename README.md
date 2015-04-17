@@ -26,6 +26,12 @@ Example of installing all dependencies using pip:
 ```python
 pip install -r requirements.txt
 ```
+
+**18.04.2015**
+ Team-Cympu ASN info, now apart of number will show data, example:
+* [+] TEAM-CYMRU ASN details:
+	15169 - US - arin - 2000-03-30 - GOOGLE - Google Inc.,US
+
 **17.04.2015 - added new domain and ip options, other new stuff soon**
 * detected-referrer-samples
 * undetected-referrer-samples
@@ -41,6 +47,7 @@ pip install -r requirements.txt
 * alexa-rank
 * opera-info
 * drweb-cat
+*
 
 **02.04.2015:**
 * Download from VT intelligence 
