@@ -9,7 +9,7 @@
 # https://www.virustotal.com/en/documentation/private-api
 
 __author__ = 'Andriy Brukhovetskyy - DoomedRaven'
-__version__ = '2.0.8'
+__version__ = '2.0.8.1'
 __license__ = 'GPLv3'
 
 import os
@@ -18,7 +18,7 @@ import csv
 import time
 import json
 import glob
-
+import socket
 import hashlib
 import argparse
 import requests
@@ -1015,6 +1015,20 @@ class vtAPI():
 
                 if asn and jdata.get('asn'):
                     print '\n[+] ASN: {0}'.format(jdata['asn'])
+                    try:
+                        s = socket.socket()
+                        s.connect(('whois.cymru.com', 43))
+                        s.send('begin\nverbose\nAS{0}\nend'.format(jdata['asn']))
+                        res = s.recv(1024)
+                        if res:
+                            print '[+] TEAM-CYMRU ASN details:'
+                            if res.find('\n') != -1:
+                                res = res.split('\n')[1].split('|')
+                                res = map(lambda value: value.strip(), res)
+                                res = ' - '.join(res)
+                            print '\t{0}'.format(res)
+                    except:
+                        pass
 
                 if country and jdata.get('country'):
                     print '\n[+] Country: {0}'.format(jdata['country'])
@@ -2033,7 +2047,7 @@ def main():
         if options.date:
 
             if len(options.date) < 14:
-                print '\n[!] Date fotmar is: 20120725170000 or 2012-07-25 17 00 00 or 2012-07-25 17:00:00\n'
+                print '\n[!] Date formar is: 20120725170000 or 2012-07-25 17 00 00 or 2012-07-25 17:00:00\n'
                 return
 
             now = time.strftime("%Y:%m:%d %H:%M:%S")
