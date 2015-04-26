@@ -34,7 +34,7 @@ from dateutil.relativedelta import relativedelta
 try:
      from requests.packages.urllib3.exceptions import InsecureRequestWarning
      requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-except AttributeError:
+except (AttributeError, ImportError):
      pass
 
 def private_api_access_error():
